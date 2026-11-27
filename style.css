@@ -24,3 +24,6 @@
 
 /* Practical project track */
 .project-kit{border-top:1px solid var(--line);padding:1em 0;margin-top:1em;scroll-margin-top:1em}.project-kit details{border:1px solid var(--line);padding:.75em;background:var(--panel)}.project-kit summary{cursor:pointer;font-weight:bold}.project-check{display:flex!important;align-items:flex-start;gap:.5em;margin:.5em 0}.project-check input{flex:none;margin-top:.3em}.project-command{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}.project-kit textarea{width:100%}.project-kit[hidden]{display:none}
+
+/* Advisory tutor and diagnostics: preserve readable lines without horizontal scrolling. */
+.tutor-output{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;font:inherit;line-height:1.5;padding:.75em;border:1px solid var(--line);background:var(--panel)}.tutor-output:empty{display:none}#ai-status{margin:.6em 0;font-size:.92em}#tutor-question{width:100%}#ai-reference[hidden]{display:none}
