@@ -28,7 +28,7 @@ Visit http://localhost:8000. Localhost and the deployed site have separate brows
 - The next chapter unlocks. Manual unlock is available without awarding mastery. Due reviews do not block progression.
 - Review each mastered detailed unit (or compact chapter) independently after 1, 3, 7, 14, 30 and 60 days; failing retrieval resets that item's interval to one day.
 - Export progress regularly in Preferences. Local storage can be cleared or evicted. The PDF and model weights are not included in exported progress.
-- Chapters 2, 4–10, 13–23, 26–33 and 36–44 now have 81 detailed, sequential learning units (16 introduction/CPU, 24 memory, 20 concurrency, 21 persistence) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. The remaining 3 substantive chapters retain the first-pass chapter-level material and generic quizzes; they still need a detailed curriculum expansion. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
+- All 39 substantive chapters (2, 4–10, 13–23, 26–33, 36–44 and 47–49) now have 90 detailed, sequential learning units (16 introduction/CPU, 24 memory, 20 concurrency, 21 persistence, 9 distribution) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. All substantive chapters now use the detailed renderer and topic-specific quizzes; a comprehensive pedagogical and technical audit remains. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
 
 ## Local AI (optional, free)
 
@@ -94,6 +94,7 @@ Package availability and the required compiler vary by distro and xv6 revision; 
 - memory-depth.js — expanded memory virtualization content
 - concurrency-depth.js — expanded concurrency content
 - persistence-depth.js — expanded storage and persistence content
+- distribution-depth.js — expanded distributed communication, NFS and AFS content
 - depth.js — shared detailed-unit renderer and mastery rules
 - tests/curriculum.test.js — automated regression checks
 
@@ -103,7 +104,7 @@ The original textbook is by Remzi H. and Andrea C. Arpaci-Dusseau, https://ostep
 
 ## Known limitations / verification
 
-The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. The introduction, CPU virtualization, memory virtualization, concurrency and persistence have received detailed expansions; distribution still needs comparable work. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
+The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. All substantive chapters have received detailed expansions; a full pedagogical audit, project expansion and end-to-end verification remain. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
 
 ## Detailed learning units (current expansion)
 
@@ -146,6 +147,9 @@ The source has been committed, but a deployed browser session and local AI have 
 | 42 | Interrupted updates and FSCK; journaling; alternative consistency designs |
 | 43 | Sequential writes and buffer sizing; inode maps; cleaning and recovery |
 | 44 | Failure modes and checksums; misdirection, lost writes and scrubbing |
+| 47 | UDP and integrity; acknowledgments, retries and sequence counters; RPC |
+| 48 | Stateless NFSv2 file handles; idempotent retry and stable writes; cache consistency |
+| 49 | AFSv1/v2 and callbacks; session consistency and recovery; workload performance |
 
 Each unit has independent mastery checks, written reasoning, practical evidence, and its own spaced repetition schedule. A chapter is mastered only when all its units are mastered. Overrides unlock without awarding mastery. Existing chapter-level attempts are retained; previously mastered expanded chapters require the new checks and retain their previous mastery history. Export a backup before substantial updates.
 
@@ -188,4 +192,15 @@ The concurrency lessons include original counterexamples and C investigations. U
 - **Log liveness:** append new values and identify current versus obsolete versions by stable logical identity.
 - **Integrity:** compare additive and CRC32 checksums, independently expected identity and version. Illustrates collisions, misdirection and stale writes without touching real storage devices.
 
-Native exercises use disposable directories and bounded files only. Never simulate crashes by interrupting real filesystem writes. Durability guarantees depend on platform and device semantics; the historical HDD and FFS models should not be assumed to describe APFS. The regression suite currently covers 100 test cases, including 81 detailed units. Run npm test locally; live browser, local model inference and native C exercises still require end-to-end verification.
+Native exercises use disposable directories and bounded files only. Never simulate crashes by interrupting real filesystem writes. Durability guarantees depend on platform and device semantics; the historical HDD and FFS models should not be assumed to describe APFS. The regression suite currently covers 115 test cases, including 90 detailed units. Run npm test locally; live browser, local model inference and native C exercises still require end-to-end verification.
+
+### Distributed systems laboratories
+
+- **Message and RPC retry:** one outstanding request ID, lost requests/replies, server downtime and restart, duplicate suppression, set versus increment. Volatile duplicate state disappears on restart; modeled effects persist. This does not imply real exactly-once execution.
+- **NFS file handles:** one file, two-byte reads, client-local offsets, server restart and inode generation reuse.
+- **NFS stable WRITE:** compare durable acknowledgment with the intentionally unsafe volatile acknowledgment that loses the middle block after a crash.
+- **NFS cache:** one file, explicit open/read/write/close, simulated attribute TTL and version validation. Whole-value updates stand in for block updates; no refresh during an open session.
+- **AFS callbacks:** one file and independent client sessions, close publishes a dirty copy, invalidation and last-closer-wins, detected server restart makes callbacks suspect. Existing open sessions are not forcibly refreshed.
+- **NFS/AFS costs:** historical per-block model from chapter 49; vary cache fit, workload and network/disk/memory cost. Not a benchmark of current protocol versions.
+
+The detailed curriculum now spans all 39 substantive chapters: 90 units, 180 worked examples, 180 direct-transfer exercises, 180 variation exercises, 90 multipart synthesis prompts and 450 quiz questions. The Laboratory contains 33 teaching models. The regression test definitions were executed against the fetched source in a JavaScript test harness (115 cases, 1,533 assertions); actual Node npm test and live browser flows have not been independently executed here. Remaining work: pedagogical/content audit, expanded practical project specifications/tests, browser and local AI verification.
