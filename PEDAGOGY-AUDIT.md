@@ -1,6 +1,6 @@
 # Pedagogical audit and visual learning aids
 
-Scope: the 39 substantive chapters and 90 detailed units in Personal OSTEP Tool. Basis: the supplied OSTEP PDF (675 physical pages), its table of contents, and the user's mathematical pedagogy Markdown. Dialogues, front matter and ancillary material are outside the detailed assessment path.
+Historical scope: the 39 numbered substantive chapters and 90 detailed units in Personal OSTEP Tool. The subsequent [final sanity check](SANITY-CHECK.md) added six substantive appendices (13 units) and verified the expanded release with Node.js and Chromium. Basis: the supplied OSTEP PDF (675 physical pages), its table of contents, and the user's mathematical pedagogy Markdown. Dialogues and front matter are outside the detailed assessment path.
 
 ## Findings and changes
 
