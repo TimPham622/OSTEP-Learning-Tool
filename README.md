@@ -203,3 +203,5 @@ Each of the 12 projects includes a worked design trace linked to specific learni
 ### Local tutor regression coverage
 
 The new tutor tests cover scoped prompts, allowed model identifiers, exact worked-example references, rubric evidence, deterministic fallback, mocked Ollama and worker transport, cancellation and all 646 task contexts generated from the 90 learning units. See the [AI tutor verification guide](AI-TUTOR.md). The regression tests are not live inference benchmarks.
+
+Phase 9 verification: 12 tutor regression cases and 1,344 assertions passed in a JavaScript source harness against the committed modules, including all 646 curriculum task contexts. The harness used simulated transports and an AbortController substitute, not an actual browser or Node.js test runner. The 11 inspected JavaScript files passed syntax checks; a final app-only input-length guard also passed syntax checking. Actual WebLLM initialization, Ollama generation, GPU memory use, local-network permissions and browser UX remain to be tested on the target machine.
