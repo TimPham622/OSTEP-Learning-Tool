@@ -91,7 +91,7 @@ export function conditionTrace(capacity,ops){if(!Number.isSafeInteger(capacity)|
  else throw Error('Use consume, produce or broadcast');
  rows.push({id,op,result,count,waiting:[...waiting],ready:[...ready]})}return rows}
 export function eventTrace(delay,otherArrival,mode){if(!Number.isSafeInteger(delay)||delay<1||!Number.isSafeInteger(otherArrival)||otherArrival<0)throw Error('Invalid timing');if(!['blocking','async'].includes(mode))throw Error('Unknown mode');let b=mode==='blocking'?Math.max(delay,otherArrival):otherArrival;
- return {otherDispatch:b,otherLatency:b-otherArrival,events:[{t:0,text:mode==='blocking'?'A begins blocking read':'A submits async read and saves continuation'},{t:otherArrival,text:'B becomes ready'},{t:b,text:'B dispatched'},{t:delay,text:mode==='blocking'?'A read returns':'A completion arrives and continuation resumes'}].sort((a,b)=>a.t-b.t)}}
+ return {otherDispatch:b,otherLatency:b-otherArrival,events:[{t:0,text:mode==='blocking'?'A begins blocking read':'A submits async read and saves continuation'},{t:otherArrival,text:'B becomes ready'},{t:delay,text:mode==='blocking'?'A read returns':'A completion arrives and continuation resumes'},{t:b,text:'B dispatched'}].sort((a,b)=>a.t-b.t)}}
 
 export function mountLab(host,type){
 let body='',run;
