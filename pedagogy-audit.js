@@ -54,11 +54,41 @@ export const supplements={
 '41a':{example:2,lines:['FFS calls this placement unit a cylinder group {each group contains allocation metadata, inodes and data}.']},
 '47b':{example:1,lines:['If the initial timer is 50 ms, a backoff doubles it to 100 ms after the first timeout {multiply by 2}.','A second timeout doubles it to 200 ms {repeat the rule on the new timer, not on the initial timer}.']},
 '14b':{example:2,lines:['After free(p), any surviving alias to the released allocation is dangling {the allocation lifetime has ended}.']},
+'6a':{example:2,lines:['At boot the privileged kernel establishes the trusted trap table {user-mode code must not choose arbitrary privileged entry points}.']},
 '4a':{example:2,lines:['The PC identifies the next instruction in this simplified execution model {the saved register allows resumption}.']},
 '8a':{example:1,lines:['If two runnable jobs have equal priority, round robin chooses their order {the within-queue rule differs from between-queue priority}.']},
 '31c':{pages:[370,378]}
 };
-mappings['36b'][1]='1.6-6';mappings['41a'][1]='2.5-5';mappings['47b'][1]='1.5-6';mappings['14b'][1]='2.5-5';mappings['4a'][1]='2.5-5';mappings['8a'][1]='1.5-5';
+mappings['6a'][1]='2.4-4';mappings['36b'][1]='1.6-6';mappings['41a'][1]='2.5-5';mappings['47b'][1]='1.5-6';mappings['14b'][1]='2.5-5';mappings['4a'][1]='2.5-5';mappings['8a'][1]='1.5-5';mappings['7b'][3]='T';
+
+ // Direct-transfer references narrowed to the relevant transition(s).
+const focus={
+'2a':['1.1-3','2.1-3'],'2b':['1.2-4','2.2-4'],'4a':['1.1-2','2.5-5'],'4b':['1.2-2','1.3-3'],
+'5a':['1.2-2','1.3-3'],'5b':['1.3-3','2.2-2'],'6a':['1.3-4','2.4-4'],'6b':['1.2-3','2.2-3'],
+'7a':['1.2-4','2.1-3'],'7b':['1.2-2','1.2-3'],'7c':['1.2-2','1.5-5'],'8a':['1.2-2','1.5-5'],
+'8b':['1.2-4','2.2-2'],'9a':['1.1-2','2.1-2'],'10a':['1.1-3','2.2-4'],'10b':['1.1-2','2.1-3'],
+'13a':['1.1-3','2.2-2'],'14a':['1.1-3','1.4-4'],'14b':['1.1-4','2.5-5'],'15a':['1.2-3','2.1-3'],
+'15b':['1.3-4','2.2-3'],'16a':['1.1-3','1.2-3'],'16b':['1.1-2','1.3-4'],'17a':['1.2-4','2.3-4'],
+'17b':['1.2-4','1.1-2'],'18a':['1.1-2','1.2-3'],'18b':['1.2-4','2.1-2'],'19a':['1.1-2','1.3-4'],
+'19b':['1.1-3','2.3-4'],'20a':['1.2-4','2.2-3'],'20b':['1.1-2','1.3-4'],'20c':['1.1-2','1.2-3'],
+'21a':['1.2-3','1.5-5'],'21b':['1.2-4','2.1-3'],'22a':['1.2-5','2.2-4'],'22b':['1.3-4','2.2-3'],
+'22c':['1.2-3','1.2-3'],'23a':['1.1-2','1.1-2'],'23b':['1.1-2','1.3-4'],'23c':['1.2-4','2.3-5'],
+'26a':['1.2-3','2.1-3'],'26b':['1.1-4','2.1-4'],'27a':['1.3-4','2.1-3'],'27b':['2.2-2','2.1-4'],
+'28a':['1.1-4','1.3-4'],'28b':['1.1-1','2.1-2'],'28c':['1.1-1','1.2-3'],'29a':['2.2-4','2.1-2'],
+'29b':['1.2-4','2.1-3'],'30a':['2.1-3','1.2-2'],'30b':['1.1-1','2.2-3'],'30c':['1.1-2','2.2-2'],
+'31a':['1.1-1','2.1-1'],'31b':['1.1-2','1.3-4'],'31c':['1.3-4','2.1-3'],'32a':['1.1-3','2.1-3'],
+'32b':['1.2-2','2.1-4'],'32c':['1.1-2','2.1-1'],'33a':['1.1-1','1.1-2'],'33b':['1.2-4','2.1-3'],
+'36a':['1.1-2','2.1-2'],'36b':['1.3-4','1.6-6'],'37a':['1.1-1','1.2-4'],'37b':['2.1-2','1.2-3'],
+'38a':['1.1-3','2.1-2'],'38b':['1.1-2','1.2-3'],'39a':['1.2-3','2.2-2'],'39b':['1.3-4','2.3-3'],
+'39c':['1.1-2','2.5-5'],'40a':['1.1-2','2.1-2'],'40b':['1.1-5','2.1-2'],'41a':['2.1-3','2.5-5'],
+'41b':['2.2-3','2.3-4'],'42a':['1.2-3','2.1-2'],'42b':['1.1-2','1.2-4'],'42c':['2.2-3','1.2-3'],
+'43a':['1.2-4','2.2-5'],'43b':['1.2-3','2.2-3'],'43c':['1.1-3','2.1-2'],'44a':['1.1-2','1.3-4'],
+'44b':['1.2-4','2.5-5'],'47a':['1.1-1','2.1-1'],'47b':['2.2-3','1.5-6'],'47c':['1.1-1','2.2-3'],
+'48a':['1.2-2','1.4-5'],'48b':['1.2-4','1.3-4'],'48c':['1.1-3','2.3-4'],'49a':['1.3-3','2.1-3'],
+'49b':['1.1-2','2.2-3'],'49c':['1.1-2','1.1-3']
+};
+for(const [id,pair] of Object.entries(focus))mappings[id].splice(0,2,...pair);
+
 const annotations={'9a:2:3':'choose smallest pass; tie rule selects A; add A stride to A pass','22b:1:2':'both referenced pages are initially absent; fill free frames in reference order','41a:1:4':'the trace contains long metadata-to-data and data-to-metadata movements'};
 
 // Unit-specific structural decomposition and two metacognitive callouts, reviewed against
@@ -156,7 +186,7 @@ export const anatomyNotes={
 '49c':['N blocks; Lnet > Ldisk > Lmem; cost depends on cold/warm access, cache fit and number of transferred blocks.','State whether the file fits memory or only local disk before choosing a reread formula.','A sparse overwrite fetches and stores the whole file in historical AFS under stated assumptions; NFS sends aligned block.']
 };
 
-export function auditUnits(detailed){for(const u of Object.values(detailed).flat()){
+export function auditUnits(source){const detailed=Object.fromEntries(Object.entries(source).map(([ch,units])=>[ch,units.map(u=>({...u,pages:[...u.pages],examples:u.examples.map(ex=>[...ex])}))]));for(const u of Object.values(detailed).flat()){
  let notes=anatomyNotes[u.id];if(notes){u.anatomy=notes[0];u.coach=notes.slice(1)}let s=supplements[u.id];if(s?.pages)u.pages=[...s.pages];if(s?.lines)u.examples[s.example-1].push(...s.lines);
  u.examples=u.examples.map((ex,i)=>[ex[0],...ex.slice(1).map((line,j)=>/\{[^}]+\}/.test(line)?line:line+' {'+(annotations[u.id+':'+(i+1)+':'+(j+1)]||'given initial state for this trace')+'}')]);
 }return detailed}
