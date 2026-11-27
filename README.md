@@ -1,6 +1,12 @@
 # Personal OSTEP Tool
 
-A personal, self-paced study tool for *Operating Systems: Three Easy Pieces* (uploaded v0.90 / 2014 edition). The design follows the density and typography of legacy Wikipedia Vector: no custom fonts, thin rules, persistent sidebar, a full-width document layout and an adjustable reference pane.
+A personal, self-paced study tool for *Operating Systems: Three Easy Pieces* (supplied 675-page PDF: numbered v0.90 material and v0.91 SSD appendix). The design follows the density and typography of legacy Wikipedia Vector: no custom fonts, thin rules, persistent sidebar, a full-width document layout and an adjustable reference pane.
+
+## Current coverage and verified release
+
+39 numbered chapters plus six substantive appendices (B, D, F, G, H, I): **45 entries, 103 detailed units, 206 worked examples, 412 required direct/variation exercises, 515 quiz questions, 103 synthesis prompts, 45 original figures, 33 labs and 12 project kits**. The 16 optional full-trace tasks are additional.
+
+[Final sanity check](SANITY-CHECK.md) records the corrections and verification limits. The [GitHub Actions run](https://github.com/TimPham622/OSTEP-Learning-Tool/actions/runs/45971152987) passed 163 Node tests, nine C starter compilation checks and eight real Chromium tests on commit 47cbe1b. [Pages deployment](https://github.com/TimPham622/OSTEP-Learning-Tool/actions/runs/45971152977) also succeeded. Real local model inference, completed project solutions and native macOS/xv6 execution still need target-machine checks.
 
 ## Deploy on GitHub Pages
 
@@ -8,8 +14,8 @@ A personal, self-paced study tool for *Operating Systems: Three Easy Pieces* (up
 2. Under **Build and deployment**, choose **Deploy from a branch**.
 3. Choose **main** and **/(root)**, then **Save**.
 4. Wait for GitHub's deployment to finish (check Actions or the Pages settings).
-5. Open https://timpham622.github.io/OSTEP-Learning-Tool/ . The Pages URL is expected, not verified until deployment.
-6. In the Textbook pane, select your local v0.90 OSTEP PDF. It is stored in IndexedDB, not uploaded. The reader uses the browser's built-in PDF viewer and verified physical PDF page ranges; if a browser ignores the page fragment, navigate manually.
+5. Open https://timpham622.github.io/OSTEP-Learning-Tool/ . GitHub reports a successful deployment; external access from the development environment was unavailable.
+6. In the Textbook pane, select your local supplied OSTEP PDF. It is stored in IndexedDB, not uploaded. The reader uses the browser's built-in PDF viewer and verified physical PDF page ranges; if a browser ignores the page fragment, navigate manually.
 
 No build step, API key, account or server is required for the core site. For local testing:
 ```sh
@@ -21,14 +27,14 @@ Visit http://localhost:8000. Localhost and the deployed site have separate brows
 
 ## Study workflow
 
-- Start at chapter 2. All 39 substantive chapters of the supplied edition are indexed, with 11 dialogues optional. Chapter 47–49 cover distribution. The later editions of OSTEP contain other chapters not in this PDF.
+- Start at chapter 2. All 39 numbered substantive chapters and six substantive appendices of the supplied PDF are indexed; numbered and appendix dialogues are optional. Chapter 47–49 cover distribution. The later editions of OSTEP contain other chapters not in this PDF.
 - Read the assigned chapter and attempt its opening problem. Use the theory summary, worked reasoning and investigation. The example is available in the right pane.
 - Attempt direct transfer, structural variation and synthesis. Check answers only after attempting; hints refer to the worked example.
 - Pass the direct and variation items, quiz (80%), written and synthesis rubrics and practical evidence. Free-form gates are self-assessed; AI feedback is advisory, not a grading authority.
 - The next chapter unlocks. Manual unlock is available without awarding mastery. Due reviews do not block progression.
 - Review each mastered detailed unit (or compact chapter) independently after 1, 3, 7, 14, 30 and 60 days; failing retrieval resets that item's interval to one day.
 - Export progress regularly in Preferences. Local storage can be cleared or evicted. The PDF and model weights are not included in exported progress.
-- All 39 substantive chapters (2, 4–10, 13–23, 26–33, 36–44 and 47–49) now have 90 detailed, sequential learning units (16 introduction/CPU, 24 memory, 20 concurrency, 21 persistence, 9 distribution) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. All substantive chapters now use the detailed renderer and topic-specific quizzes; a first structural and targeted pedagogical audit is documented in PEDAGOGY-AUDIT.md. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
+- All 39 numbered substantive chapters (2, 4–10, 13–23, 26–33, 36–44 and 47–49) have 90 detailed units (16 introduction/CPU, 24 memory, 20 concurrency, 21 persistence, 9 distribution); six appendices add 13 units. All 103 units are sequential with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. All substantive chapters now use the detailed renderer and topic-specific quizzes; a first structural and targeted pedagogical audit is documented in PEDAGOGY-AUDIT.md. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
 
 ## Local AI (optional, free)
 
@@ -38,7 +44,7 @@ Your MacBook Pro M5 with 24 GB unified memory is a reasonable starting point for
 
 See [AI-TUTOR.md](AI-TUTOR.md) for the full Mac setup, model selection, privacy constraints and manual acceptance matrix. Preferences now offers Browser WebLLM, loopback Ollama and offline guidance, model discovery, inference and coaching-contract diagnostics, cancellation and browser model release. WebLLM remains pinned at 0.2.79; actual model availability is read from its loaded catalog. For Ollama, prefer the local clone and start the server with OLLAMA_HOST=127.0.0.1:11434, OLLAMA_NO_CLOUD=1 and the exact trusted local origin as described in the guide. No cloud or paid API fallback is configured.
 
-The tutor receives only the selected unit context, task and learner attempt; no imported PDF or answer-key fields are passed. It checks structured reference IDs and rubric quotations, not semantic correctness. It never updates mastery or marks a learner's reasoning correct automatically. Failed AI responses use labeled deterministic study guidance. Actual GPU inference, browser rendering and model quality on the Mac are not yet verified.
+The tutor receives only the selected unit context, task and learner attempt; no imported PDF or answer-key fields are passed. It checks structured reference IDs and rubric quotations, not semantic correctness. It never updates mastery or marks a learner's reasoning correct automatically. Failed AI responses use labeled deterministic study guidance. Browser rendering passed Chromium smoke tests; actual GPU inference and model quality on the Mac are not yet verified.
 
 ## Practical environment: macOS and Linux
 
@@ -78,6 +84,7 @@ Package availability and the required compiler vary by distro and xv6 revision; 
 - concurrency-depth.js — expanded concurrency content
 - persistence-depth.js — expanded storage and persistence content
 - distribution-depth.js — expanded distributed communication, NFS and AFS content
+- appendix-depth.js — six substantive appendices
 - depth.js — shared detailed-unit renderer and mastery rules
 - tests/curriculum.test.js — automated regression checks
 
@@ -87,7 +94,7 @@ The original textbook is by Remzi H. and Andrea C. Arpaci-Dusseau, https://ostep
 
 ## Known limitations / verification
 
-The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. All substantive chapters have received detailed expansions and a structural/targeted pedagogical audit; further editorial review and end-to-end verification remain. The expanded project track is described below. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
+The committed source passed Node.js, Linux starter compilation and real Chromium smoke tests. GitHub reports successful Pages deployment. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments remain self-assessed. The final source audit covers chapter opening pages, selected historical descriptions, selected calculations and consistency of referenced learning tasks; it does not prove every pedagogical statement correct. Real local inference and target-machine practical execution remain unverified. See [SANITY-CHECK.md](SANITY-CHECK.md).
 
 ## Detailed learning units (current expansion)
 
@@ -101,7 +108,6 @@ The source has been committed, but a deployed browser session and local AI have 
 | 8 | Feedback priorities; starvation, boosts and gaming tolerance |
 | 9 | Lottery and stride scheduling |
 | 10 | Caches and affinity; single and multiple queues |
-
 | 13 | Address spaces and isolation |
 | 14 | Allocation/lifetime/ownership; memory errors and OS support |
 | 15 | Base/bounds relocation; OS responsibilities and context switches |
@@ -133,6 +139,12 @@ The source has been committed, but a deployed browser session and local AI have 
 | 47 | UDP and integrity; acknowledgments, retries and sequence counters; RPC |
 | 48 | Stateless NFSv2 file handles; idempotent retry and stable writes; cache consistency |
 | 49 | AFSv1/v2 and callbacks; session consistency and recovery; workload performance |
+| B | Virtual machine monitors: privilege, translation and information gap |
+| D | Monitors: condition signaling and semaphore implementation |
+| F | Laboratory tutorial: development tools and debugging |
+| G | Systems projects and design planning |
+| H | xv6 projects and kernel design planning |
+| I | Flash-based SSDs: operations, FTL, cleaning, amplification and wear |
 
 Each unit has independent mastery checks, written reasoning, practical evidence, and its own spaced repetition schedule. A chapter is mastered only when all its units are mastered. Overrides unlock without awarding mastery. Existing chapter-level attempts are retained; previously mastered expanded chapters require the new checks and retain their previous mastery history. Export a backup before substantial updates.
 
@@ -144,7 +156,7 @@ With Node.js installed (no npm dependencies required), clone the repository and 
 npm test
 ```
 
-The suite checks PDF range containment, unique unit identifiers, exercise and quiz structure, accepted answers, blank answer rejection, mastery thresholds, prerequisite unlocks, overrides and representative scheduling, page replacement, clock, free-list allocation, segmentation, two-level page-table traces, lock ownership, ticket ordering, semaphore permits, condition-variable wakeups, event-loop latency, disk timing, RAID mapping, inode allocation, crash recovery, log liveness and integrity checks. Browser rendering, IndexedDB import, deployment and local AI still require manual testing.
+The suite checks PDF range containment, unique unit identifiers, exercise and quiz structure, accepted answers, blank answer rejection, mastery thresholds, prerequisite unlocks, overrides and representative scheduling, page replacement, clock, free-list allocation, segmentation, two-level page-table traces, lock ownership, ticket ordering, semaphore permits, condition-variable wakeups, event-loop latency, disk timing, RAID mapping, inode allocation, crash recovery, log liveness and integrity checks. Browser rendering and IndexedDB import passed automated Chromium smoke tests; actual local AI still requires manual testing.
 
 ### Memory laboratory additions
 
@@ -175,7 +187,7 @@ The concurrency lessons include original counterexamples and C investigations. U
 - **Log liveness:** append new values and identify current versus obsolete versions by stable logical identity.
 - **Integrity:** compare additive and CRC32 checksums, independently expected identity and version. Illustrates collisions, misdirection and stale writes without touching real storage devices.
 
-Native exercises use disposable directories and bounded files only. Never simulate crashes by interrupting real filesystem writes. Durability guarantees depend on platform and device semantics; the historical HDD and FFS models should not be assumed to describe APFS. The regression suite currently covers 115 test cases, including 90 detailed units. Run npm test locally; live browser, local model inference and native C exercises still require end-to-end verification.
+Native exercises use disposable directories and bounded files only. Never simulate crashes by interrupting real filesystem writes. Durability guarantees depend on platform and device semantics; the historical HDD and FFS models should not be assumed to describe APFS. At the persistence-expansion milestone, the regression suite covered 115 cases. See the current verified release above for updated results.
 
 ### Distributed systems laboratories
 
@@ -186,11 +198,11 @@ Native exercises use disposable directories and bounded files only. Never simula
 - **AFS callbacks:** one file and independent client sessions, close publishes a dirty copy, invalidation and last-closer-wins, detected server restart makes callbacks suspect. Existing open sessions are not forcibly refreshed.
 - **NFS/AFS costs:** historical per-block model from chapter 49; vary cache fit, workload and network/disk/memory cost. Not a benchmark of current protocol versions.
 
-The detailed curriculum now spans all 39 substantive chapters: 90 units, 180 worked examples, 180 direct-transfer exercises, 180 variation exercises, 90 multipart synthesis prompts and 450 quiz questions. The Laboratory contains 33 teaching models. The regression test definitions were executed against the fetched source in a JavaScript test harness (115 cases, 1,533 assertions); actual Node npm test and live browser flows have not been independently executed here. Subsequent phases added a structural pedagogical audit and expanded practical project kits; browser and local AI verification remain.
+At the distribution-expansion milestone, the numbered curriculum spanned 39 chapters: 90 units, 180 worked examples, 180 direct-transfer exercises, 180 variation exercises, 90 multipart synthesis prompts and 450 quiz questions. The Laboratory contains 33 teaching models. The regression test definitions were executed against the fetched source in a JavaScript test harness (115 cases, 1,533 assertions); actual Node and browser checks were still pending at that milestone. Subsequent phases added pedagogical review, project kits, appendices and successful CI browser checks.
 
 ### Pedagogical audit and visual learning aids
 
-See [PEDAGOGY-AUDIT.md](PEDAGOGY-AUDIT.md). All 90 units now include topic-specific structural anatomy, two coach notes, corrected exercise references, progressive hints, a consolidated answer key and 39 original SVG figures across all chapters. Sixteen optional full-trace exercises deepen direct transfer without changing required mastery gates. All 299 numbered section headings are included in the assigned reading ranges; eight underdeveloped units received targeted source-based additions. This does not prove exhaustive conceptual coverage. Latest JavaScript harness rerun: 119 cases and 4,241 assertions, 14 source files syntax-checked. Actual Node runner, browser, native assignments and model inference remain unverified.
+See [PEDAGOGY-AUDIT.md](PEDAGOGY-AUDIT.md). All 90 original numbered-chapter units include topic-specific structural anatomy, two coach notes, corrected exercise references, progressive hints, a consolidated answer key and 39 original SVG figures across all chapters. Sixteen optional full-trace exercises deepen direct transfer without changing required mastery gates. All 299 numbered section headings are included in the assigned reading ranges; eight underdeveloped units received targeted source-based additions. This does not prove exhaustive conceptual coverage. Latest JavaScript harness rerun: 119 cases and 4,241 assertions, 14 source files syntax-checked. This describes the earlier audit milestone; later Node, browser and starter-compilation checks passed. Completed assignments and real model inference remain unverified.
 
 ## Expanded practical project track
 
@@ -198,10 +210,10 @@ The Projects page now contains 12 staged C and xv6 assignments, with separate sp
 
 ### Project scaffolding and verification
 
-Each of the 12 projects includes a worked design trace linked to specific learning-unit IDs, a seeded debugging question with a collapsible structural hint, implementation milestones, and a saved evidence checklist. The native test runner defines 45 behavioral cases across nine suites, plus one compilation check per suite. All nine committed native C starters and the Python runner were reconstructed in a local Linux environment and matched against the exact Git blob hashes, then executed: `all --smoke` passed 9/9; the full starter run completed with 13/54 checks passing and nonzero exit, as expected for intentionally incomplete code (41 failures). Completed solutions have not been tested. The 119 existing curriculum regression cases and 14 project cases passed in a JavaScript source harness; 24 additional scaffold assertions passed separately. A direct clone was blocked by DNS/network access. Actual macOS execution, xv6 guest runs, browser UI, and local AI inference are still unverified. For xv6, the three supplied tests exercise syscall copyout, dispatch accounting and read-only PTE inspection; they require the learner's implementation and are not kernel patches.
+Each of the 12 projects includes a worked design trace linked to specific learning-unit IDs, a seeded debugging question with a collapsible structural hint, implementation milestones, and a saved evidence checklist. The native test runner defines 45 behavioral cases across nine suites, plus one compilation check per suite. All nine committed native C starters and the Python runner were reconstructed in a local Linux environment and matched against the exact Git blob hashes, then executed: `all --smoke` passed 9/9; the full starter run completed with 13/54 checks passing and nonzero exit, as expected for intentionally incomplete code (41 failures). Completed solutions have not been tested. The 119 existing curriculum regression cases and 14 project cases passed in a JavaScript source harness; 24 additional scaffold assertions passed separately. A direct clone was blocked by DNS/network access. Actual macOS execution, xv6 guest runs and local AI inference remain unverified; Chromium UI checks later passed. For xv6, the three supplied tests exercise syscall copyout, dispatch accounting and read-only PTE inspection; they require the learner's implementation and are not kernel patches.
 
 ### Local tutor regression coverage
 
-The new tutor tests cover scoped prompts, allowed model identifiers, exact worked-example references, rubric evidence, deterministic fallback, mocked Ollama and worker transport, cancellation and all 646 task contexts generated from the 90 learning units. See the [AI tutor verification guide](AI-TUTOR.md). The regression tests are not live inference benchmarks.
+The new tutor tests cover scoped prompts, allowed model identifiers, exact worked-example references, rubric evidence, deterministic fallback, mocked Ollama and worker transport, cancellation and all 737 task contexts generated from the 103 learning units. See the [AI tutor verification guide](AI-TUTOR.md). The regression tests are not live inference benchmarks.
 
-Phase 9 verification: 12 tutor regression cases and 1,344 assertions passed in a JavaScript source harness against the committed modules, including all 646 curriculum task contexts. The harness used simulated transports and an AbortController substitute, not an actual browser or Node.js test runner. The 11 inspected JavaScript files passed syntax checks; a final app-only input-length guard also passed syntax checking. Actual WebLLM initialization, Ollama generation, GPU memory use, local-network permissions and browser UX remain to be tested on the target machine.
+Phase 9 verification: 12 tutor regression cases and 1,344 assertions passed in a JavaScript source harness against the committed modules, including all 646 curriculum task contexts. The harness used simulated transports and an AbortController substitute, not an actual browser or Node.js test runner. The 11 inspected JavaScript files passed syntax checks; a final app-only input-length guard also passed syntax checking. This is a historical phase 9 result. Real WebLLM initialization, Ollama generation, GPU memory use, local-network permissions and target-machine browser UX still require local acceptance testing.
