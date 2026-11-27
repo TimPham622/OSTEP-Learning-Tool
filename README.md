@@ -28,7 +28,7 @@ Visit http://localhost:8000. Localhost and the deployed site have separate brows
 - The next chapter unlocks. Manual unlock is available without awarding mastery. Due reviews do not block progression.
 - Review each mastered detailed unit (or compact chapter) independently after 1, 3, 7, 14, 30 and 60 days; failing retrieval resets that item's interval to one day.
 - Export progress regularly in Preferences. Local storage can be cleared or evicted. The PDF and model weights are not included in exported progress.
-- Chapters 2 and 4–10 now have 16 detailed, sequential learning units with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. The remaining 31 substantive chapters retain the first-pass chapter-level material and generic quizzes; they still need a detailed curriculum expansion. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
+- Chapters 2, 4–10 and 13–23 now have 40 detailed, sequential learning units (16 introduction/CPU, 24 memory) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. The remaining 20 substantive chapters retain the first-pass chapter-level material and generic quizzes; they still need a detailed curriculum expansion. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
 
 ## Local AI (optional, free)
 
@@ -91,6 +91,7 @@ Package availability and the required compiler vary by distro and xv6 revision; 
 - tutor.js — optional WebLLM / Ollama adapter
 - reading.js — physical PDF page ranges verified against the supplied PDF
 - cpu-depth.js — expanded introduction and CPU virtualization content
+- memory-depth.js — expanded memory virtualization content
 - depth.js — shared detailed-unit renderer and mastery rules
 - tests/curriculum.test.js — automated regression checks
 
@@ -100,7 +101,7 @@ The original textbook is by Remzi H. and Andrea C. Arpaci-Dusseau, https://ostep
 
 ## Known limitations / verification
 
-The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. The introduction and CPU virtualization have received a detailed expansion; memory virtualization, concurrency, persistence and distribution still need comparable work. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
+The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. The introduction, CPU virtualization and memory virtualization have received detailed expansions; concurrency, persistence and distribution still need comparable work. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
 
 ## Detailed learning units (current expansion)
 
@@ -115,6 +116,18 @@ The source has been committed, but a deployed browser session and local AI have 
 | 9 | Lottery and stride scheduling |
 | 10 | Caches and affinity; single and multiple queues |
 
+| 13 | Address spaces and isolation |
+| 14 | Allocation/lifetime/ownership; memory errors and OS support |
+| 15 | Base/bounds relocation; OS responsibilities and context switches |
+| 16 | Segment selection; downward stacks, protection and fragmentation |
+| 17 | Free lists; fit policies and fragmentation |
+| 18 | Address decomposition; page tables and access cost |
+| 19 | TLB locality; refill, ASIDs and replacement |
+| 20 | Flat and hybrid tables; two-level walks; inverted/pageable tables |
+| 21 | Present bits and faults; eviction and background reclaim |
+| 22 | OPT/FIFO; random/LRU; clock and thrashing |
+| 23 | VAX/VMS mapping; segmented FIFO; demand zeroing and copy-on-write |
+
 Each unit has independent mastery checks, written reasoning, practical evidence, and its own spaced repetition schedule. A chapter is mastered only when all its units are mastered. Overrides unlock without awarding mastery. Existing chapter-level attempts are retained; previously mastered expanded chapters require the new checks and retain their previous mastery history. Export a backup before substantial updates.
 
 ### Regression tests
@@ -125,4 +138,13 @@ With Node.js installed (no npm dependencies required), clone the repository and 
 npm test
 ```
 
-The suite checks PDF range containment, unique unit identifiers, exercise and quiz structure, accepted answers, blank answer rejection, mastery thresholds, prerequisite unlocks, overrides and representative scheduling/page replacement traces. Browser rendering, IndexedDB import, deployment and local AI still require manual testing.
+The suite checks PDF range containment, unique unit identifiers, exercise and quiz structure, accepted answers, blank answer rejection, mastery thresholds, prerequisite unlocks, overrides and representative scheduling, page replacement, clock, free-list allocation, segmentation and two-level page-table traces. Browser rendering, IndexedDB import, deployment and local AI still require manual testing.
+
+### Memory laboratory additions
+
+- **Segmentation:** select a segment using high address bits, compute upward/downward displacements, check exclusive bounds.
+- **Free-list allocation:** trace allocation/free commands with first, best and worst fit, split and coalesce holes, observe fragmented failures. Excludes alignment and header overhead unless worked separately.
+- **Two-level page-table walk:** enter physical directory/table bases and PFN mappings; inspect directory/leaf indices, PTE addresses, final physical address and invalid mappings. A simplified two-level table, without TLB or permission modelling.
+- **Clock replacement:** trace frame contents, reference bits, hand movement, cleared bits and victims. New pages set their reference bit and advance the hand in this model.
+
+Use assigned sections in your imported PDF for the source theory; the worked workloads are original examples. Native memory experiments should use bounded allocations; do not force host swapping. Earlier compact mastery and answers are retained in local history, but expanded chapters must satisfy the new unit gates. Export a backup before updating if you have progress you wish to retain.
