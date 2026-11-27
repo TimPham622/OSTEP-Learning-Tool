@@ -34,28 +34,11 @@ Visit http://localhost:8000. Localhost and the deployed site have separate brows
 
 Your MacBook Pro M5 with 24 GB unified memory is a reasonable starting point for small quantized local models, but memory use and compatibility vary. First use the deterministic checks and rubrics. For browser inference use a recent WebGPU-compatible browser such as Chrome.
 
-### Browser WebLLM
+### Local AI setup
 
-1. Open Preferences, select Browser WebLLM.
-2. Default model: Qwen2.5-3B-Instruct-q4f16_1-MLC. If the pinned WebLLM release cannot load this model, check the supported model identifiers in https://github.com/mlc-ai/web-llm and enter a compatible one.
-3. Save, open a lesson, select Tutor, and submit an attempt.
-4. Initial loading downloads model weights from external hosts; several GB of free storage may be needed. Inference is local. This integration has not been tested on your Mac; use the fallback if unavailable.
+See [AI-TUTOR.md](AI-TUTOR.md) for the full Mac setup, model selection, privacy constraints and manual acceptance matrix. Preferences now offers Browser WebLLM, loopback Ollama and offline guidance, model discovery, inference and coaching-contract diagnostics, cancellation and browser model release. WebLLM remains pinned at 0.2.79; actual model availability is read from its loaded catalog. For Ollama, prefer the local clone and start the server with OLLAMA_HOST=127.0.0.1:11434, OLLAMA_NO_CLOUD=1 and the exact trusted local origin as described in the guide. No cloud or paid API fallback is configured.
 
-### Ollama
-
-Download from https://ollama.com/download/mac and install. Start with:
-```sh
-ollama pull qwen2.5:7b
-```
-For a browser origin to access the local API, quit any already-running Ollama instance, then start the server with only the intended origin allowed:
-```sh
-OLLAMA_ORIGINS="https://timpham622.github.io,http://localhost:8000" ollama serve
-```
-Leave that terminal running. Keep Ollama bound to loopback; do not expose port 11434 publicly. In Preferences choose Ollama and enter qwen2.5:7b. If the browser blocks the deployed HTTPS site's local connection, run the study tool at localhost as described above. Browser permissions and CORS behavior vary. You can verify Ollama locally with:
-```sh
-curl http://127.0.0.1:11434/api/tags
-```
-The tutor sends only the selected chapter theory, worked example, rubric and your question to the local model; it does not send the PDF. No API keys should be placed in this public repository. The browser downloads WebLLM code from an external CDN; review that dependency before entering sensitive information.
+The tutor receives only the selected unit context, task and learner attempt; no imported PDF or answer-key fields are passed. It checks structured reference IDs and rubric quotations, not semantic correctness. It never updates mastery or marks a learner's reasoning correct automatically. Failed AI responses use labeled deterministic study guidance. Actual GPU inference, browser rendering and model quality on the Mac are not yet verified.
 
 ## Practical environment: macOS and Linux
 
@@ -216,3 +199,7 @@ The Projects page now contains 12 staged C and xv6 assignments, with separate sp
 ### Project scaffolding and verification
 
 Each of the 12 projects includes a worked design trace linked to specific learning-unit IDs, a seeded debugging question with a collapsible structural hint, implementation milestones, and a saved evidence checklist. The native test runner defines 45 behavioral cases across nine suites, plus one compilation check per suite. All nine committed native C starters and the Python runner were reconstructed in a local Linux environment and matched against the exact Git blob hashes, then executed: `all --smoke` passed 9/9; the full starter run completed with 13/54 checks passing and nonzero exit, as expected for intentionally incomplete code (41 failures). Completed solutions have not been tested. The 119 existing curriculum regression cases and 14 project cases passed in a JavaScript source harness; 24 additional scaffold assertions passed separately. A direct clone was blocked by DNS/network access. Actual macOS execution, xv6 guest runs, browser UI, and local AI inference are still unverified. For xv6, the three supplied tests exercise syscall copyout, dispatch accounting and read-only PTE inspection; they require the learner's implementation and are not kernel patches.
+
+### Local tutor regression coverage
+
+The new tutor tests cover scoped prompts, allowed model identifiers, exact worked-example references, rubric evidence, deterministic fallback, mocked Ollama and worker transport, cancellation and all 646 task contexts generated from the 90 learning units. See the [AI tutor verification guide](AI-TUTOR.md). The regression tests are not live inference benchmarks.
