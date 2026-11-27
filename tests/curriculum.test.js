@@ -4,17 +4,18 @@ import {cpu} from '../cpu-depth.js';
 import {memory} from '../memory-depth.js';
 import {concurrency} from '../concurrency-depth.js';
 import {persistence} from '../persistence-depth.js';
+import {distribution} from '../distribution-depth.js';
 import {pdfRanges} from '../reading.js';
 import {matches,unitState,unitPassed,chapterPassed,unitUnlocked,gradeQuiz,selectedUnit} from '../depth.js';
-import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate,lockTrace,ticketTrace,semaphoreTrace,conditionTrace,eventTrace,diskTiming,raidMap,xorParity,inodeTrace,appendCrash,journalCrash,logTrace,checksum,verifyBlock} from '../labs.js';
+import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate,lockTrace,ticketTrace,semaphoreTrace,conditionTrace,eventTrace,diskTiming,raidMap,xorParity,inodeTrace,appendCrash,journalCrash,logTrace,checksum,verifyBlock,retryTrace,nfsHandleTrace,stableWrite,cacheTrace,afsCost} from '../labs.js';
 
-const detailed={...cpu,...memory,...concurrency,...persistence};
+const detailed={...cpu,...memory,...concurrency,...persistence,...distribution};
 const all=Object.values(detailed).flat();
-test('detailed units cover introduction, CPU, memory, concurrency and persistence chapters with unique IDs',()=>{
+test('detailed units cover introduction, CPU, memory, concurrency, persistence and distribution chapters with unique IDs',()=>{
  assert.deepEqual(Object.keys(cpu).map(Number),[2,4,5,6,7,8,9,10]);
  assert.equal(new Set(all.map(u=>u.id)).size,all.length);
  assert.deepEqual(Object.keys(memory).map(Number),[13,14,15,16,17,18,19,20,21,22,23]);
- assert.equal(Object.values(cpu).flat().length,16);assert.equal(Object.values(memory).flat().length,24);assert.deepEqual(Object.keys(concurrency).map(Number),[26,27,28,29,30,31,32,33]);assert.equal(Object.values(concurrency).flat().length,20);assert.deepEqual(Object.keys(persistence).map(Number),[36,37,38,39,40,41,42,43,44]);assert.equal(Object.values(persistence).flat().length,21);assert.equal(all.length,81);
+ assert.equal(Object.values(cpu).flat().length,16);assert.equal(Object.values(memory).flat().length,24);assert.deepEqual(Object.keys(concurrency).map(Number),[26,27,28,29,30,31,32,33]);assert.equal(Object.values(concurrency).flat().length,20);assert.deepEqual(Object.keys(persistence).map(Number),[36,37,38,39,40,41,42,43,44]);assert.equal(Object.values(persistence).flat().length,21);assert.deepEqual(Object.keys(distribution).map(Number),[47,48,49]);assert.equal(Object.values(distribution).flat().length,9);assert.equal(all.length,90);
 });
 for(const [ch,units] of Object.entries(detailed))for(const u of units)test(u.id+' content structure and grading',()=>{
  assert.ok(u.pages[0]>=pdfRanges[ch][0]&&u.pages[1]<=pdfRanges[ch][1]);
@@ -148,4 +149,37 @@ test('checksum collision, CRC reference vector, address and version checks',()=>
  assert.equal(checksum([3,5]),checksum([4,4]));assert.equal(checksum([3,5],'CRC32')===checksum([4,4],'CRC32'),false);
  assert.equal(checksum([49,50,51,52,53,54,55,56,57],'CRC32'),0xcbf43926);
  assert.deepEqual(verifyBlock({address:'A',version:2},{address:'B',version:1,bytes:[3,5],checksum:8}),{content:true,address:false,version:false});
+});
+
+test('retry ambiguity, deduplication and lost volatile state',()=>{
+ let r=retryTrace(['request lost','reply lost','ok'],'increment',true);
+ assert.equal(r.value,1);assert.equal(r.deliveries,1);assert.equal(r.completed,true);assert.equal(r.rows[2].effect,'duplicate suppressed');
+ r=retryTrace(['reply lost','ok'],'increment',false);assert.equal(r.value,2);
+ assert.equal(retryTrace(['reply lost','ok'],'set',false).value,1);
+ assert.equal(retryTrace(['reply lost','restart','ok'],'increment',true).value,2);
+ assert.equal(retryTrace(['server down','request lost'],'message',true).completed,false);
+});
+test('NFS handle survives restart but not inode reuse',()=>{
+ const r=nfsHandleTrace(['lookup','read','restart','read','reuse','read','lookup','read']);
+ assert.equal(r[1].result,'AB');assert.equal(r[3].result,'CD');assert.equal(r[3].offset,4);assert.equal(r[5].result,'stale or missing handle');assert.equal(r[7].result,'WX');
+});
+test('NFS stable acknowledgment survives crash',()=>{
+ assert.equal(stableWrite('stable').at(-1).disk,'ABC');assert.equal(stableWrite('volatile').at(-1).disk,'AYC');
+});
+const open=id=>({id,op:'open'}),read=id=>({id,op:'read'}),write=(id,value)=>({id,op:'write',value}),close=id=>({id,op:'close'}),tick=amount=>({op:'tick',amount});
+test('NFS visibility and attribute expiration',()=>{
+ const actions=[open('B'),close('B'),open('A'),write('A','V2'),open('C'),read('C'),close('C'),close('A'),tick(2),open('B'),read('B'),close('B'),tick(1),open('B'),read('B')];
+ let r=cacheTrace('NFS',3,actions);
+ assert.equal(r.rows[5].result,'read V1');assert.equal(r.rows[10].result,'read V1');assert.equal(r.rows[14].result,'read V2');assert.equal(r.server,'V2');
+ assert.equal(cacheTrace('NFS',0,actions).rows[10].result,'read V2');
+});
+test('AFS callbacks, last closer wins, restart validation',()=>{
+ let r=cacheTrace('AFS',0,[open('A'),open('B'),write('A','X'),write('B','Y'),close('B'),close('A'),open('B'),read('B'),close('B'),{op:'restart'},open('B'),read('B')]);
+ assert.equal(r.server,'X');assert.equal(r.rows[7].result,'read X');assert.equal(r.rows[11].result,'read X');assert.equal(r.stores,2);assert.equal(r.validations,2);
+ r=cacheTrace('AFS',0,[open('A'),close('A'),open('A'),close('A')]);assert.equal(r.fetches,1);assert.equal(r.validations,0);
+});
+test('historical NFS/AFS workload costs',()=>{
+ assert.deepEqual(afsCost(100,10,2,.1,'disk','reread'),{nfs:1000,afs:200,ratio:.2});
+ assert.deepEqual(afsCost(100,10,2,.1,'disk','single write'),{nfs:10,afs:2000,ratio:200});
+ assert.deepEqual(afsCost(100,10,2,.1,'memory','reread'),{nfs:10,afs:10,ratio:1});
 });
