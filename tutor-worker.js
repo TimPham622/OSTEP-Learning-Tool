@@ -1,5 +1,6 @@
 // Dedicated worker. Terminating it cancels loading/inference and releases the engine.
-const CDN='https://esm.run/@mlc-ai/web-llm@0.2.79';
+import {WEBLLM_VERSION} from './tutor.js';
+const CDN='https://esm.run/@mlc-ai/web-llm@'+WEBLLM_VERSION;
 let mlc=null,engine=null,model=null;
 self.onmessage=async e=>{
  const {id,op,model:requested,messages}=e.data;
