@@ -9,7 +9,7 @@ import {pdfRanges} from '../reading.js';
 import {matches,unitState,unitPassed,chapterPassed,unitUnlocked,gradeQuiz,selectedUnit,detailed,renderExamples} from '../depth.js';
 import {exerciseReference,stepHint,quizChoices,mappings,anatomyNotes,transferTasks,auditUnits} from '../pedagogy-audit.js';
 import {figures,renderFigure} from '../figures.js';
-import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate,lockTrace,ticketTrace,semaphoreTrace,conditionTrace,eventTrace,diskTiming,raidMap,xorParity,inodeTrace,appendCrash,journalCrash,logTrace,checksum,verifyBlock,retryTrace,nfsHandleTrace,stableWrite,cacheTrace,afsCost} from '../labs.js';
+import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate,lockTrace,ticketTrace,semaphoreTrace,conditionTrace,eventTrace,diskTiming,raidMap,xorParity,inodeTrace,appendCrash,journalCrash,logTrace,checksum,verifyBlock,mountLab,labNames,retryTrace,nfsHandleTrace,stableWrite,cacheTrace,afsCost} from '../labs.js';
 
 const all=Object.values(detailed).flat();
 test('detailed units cover introduction, CPU, memory, concurrency, persistence and distribution chapters with unique IDs',()=>{
@@ -213,3 +213,13 @@ test('quiz choices are reproducible within attempt and vary across retries',()=>
 test('scheduler ties follow project ID convention, RR arrival boundary and input validation',()=>{assert.deepEqual(schedule([2,4,1],[1,0,0],'SJF').jobs.map(j=>j.end),[3,7,1]);assert.deepEqual(schedule([2,4],[2,0],'STCF').jobs.map(j=>j.end),[4,6]);assert.deepEqual(schedule([4,1],[0,2],'RR',2).jobs.map(j=>j.end),[5,3]);});
 test('fixed frame slots and OPT tie convention',()=>{const r=replace([1,2,3,4],2,'OPT');assert.equal(r.rows[2][2],1);assert.equal(r.rows[3][2],3);assert.equal(r.rows[3][3],'4, 2');});
 test('quiz rejects non-answer coercions',()=>{assert.equal(gradeQuiz([['q']], [false]).score,0);assert.equal(gradeQuiz([['q']], [' ']).score,0);assert.equal(gradeQuiz([['q']], [0]).score,100)});
+
+test('all laboratory default controls yield a result without errors',()=>{
+ for(const type of Object.keys(labNames)){
+  const values={},run={},out={innerHTML:'',textContent:''};
+  const host={set innerHTML(s){for(const m of s.matchAll(/<input[^>]*id="([^"]+)"[^>]*value="([^"]*)"/g))values[m[1]]=m[2];for(const m of s.matchAll(/<select id="([^"]+)">.*?<option(?: value="([^"]+)")?>([^<]+)<\/option>/g))values[m[1]]=m[2]??m[3]},
+   querySelector(s){if(s==='[data-run]')return run;if(s==='[data-out]')return out;return{value:values[s.slice(1)]}}};
+  mountLab(host,type);run.onclick();
+  assert.ok(out.innerHTML);assert.equal(out.textContent,'');
+ }
+});
