@@ -146,6 +146,6 @@ test('log liveness follows most recent logical mapping',()=>{
 });
 test('checksum collision, CRC reference vector, address and version checks',()=>{
  assert.equal(checksum([3,5]),checksum([4,4]));assert.equal(checksum([3,5],'CRC32')===checksum([4,4],'CRC32'),false);
- assert.equal(checksum([...new TextEncoder().encode('123456789')],'CRC32'),0xcbf43926);
+ assert.equal(checksum([49,50,51,52,53,54,55,56,57],'CRC32'),0xcbf43926);
  assert.deepEqual(verifyBlock({address:'A',version:2},{address:'B',version:1,bytes:[3,5],checksum:8}),{content:true,address:false,version:false});
 });
