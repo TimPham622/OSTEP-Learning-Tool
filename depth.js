@@ -1,9 +1,10 @@
 // Shared renderer and mastery rules for detailed learning units.
 import {cpu} from './cpu-depth.js';
 import {memory} from './memory-depth.js';
+import {concurrency} from './concurrency-depth.js';
 import {mountLab} from './labs.js';
-export const detailed={...cpu,...memory};
-const unitLabs={'16a':'segment','16b':'segment','17a':'allocator','17b':'allocator','20b':'multilevel','22c':'clock'};
+export const detailed={...cpu,...memory,...concurrency};
+const unitLabs={'16a':'segment','16b':'segment','17a':'allocator','17b':'allocator','20b':'multilevel','22c':'clock','27b':'condition','28a':'locktrace','28b':'locktrace','28c':'ticket','30a':'condition','30b':'condition','31a':'permits','31c':'deadlock','32a':'race','32b':'deadlock','32c':'deadlock','33b':'eventloop'};
 const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const N=s=>String(s??'').trim().toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ').replace(/%$/,'');
 const list=(xs,tag='ul')=>'<'+tag+'>'+xs.map(x=>'<li>'+E(x)+'</li>').join('')+'</'+tag+'>';
