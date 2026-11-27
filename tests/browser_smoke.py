@@ -1,7 +1,6 @@
 """Browser acceptance checks. Run from repo root: python3 tests/browser_smoke.py.
 Requires playwright and Chromium. Uses disposable browser profiles and a loopback server.
 No real learner data, GPU inference, or textbook copyright material is used."""
-import contextlib
 import functools
 import http.server
 import json
@@ -184,7 +183,7 @@ class BrowserTests(unittest.TestCase):
         p=self.page.locator("#project-utilities")
         p.locator("details").filter(has_text="Milestones and acceptance checklist").locator("summary").first.click()
         self.page.once("dialog",lambda dialog:dialog.accept())
-        p.locator("[data-project-done]").check()
+        p.locator("[data-project-done]").click()
         self.assertFalse(p.locator("[data-project-done]").is_checked())
         for cb in p.locator("[data-project-kind]").all():
             cb.check()
@@ -221,7 +220,9 @@ class BrowserTests(unittest.TestCase):
         self.page.locator("#save-ai").click()
         # Route interception verifies UI wiring, not CORS or real inference.
         def ollama(route):
-            if route.request.url.endswith("/api/tags"):
+            if route.request.method == "OPTIONS":
+                route.fulfill(status=204,headers={"access-control-allow-origin":"*","access-control-allow-methods":"GET, POST, OPTIONS","access-control-allow-headers":"content-type"})
+            elif route.request.url.endswith("/api/tags"):
                 route.fulfill(json={"models":[{"name":"local:test"}]},headers={"access-control-allow-origin":"*"})
             else:
                 route.fulfill(json={"done":True,"message":{"content":"OSTEP_OK"}},headers={"access-control-allow-origin":"*"})
