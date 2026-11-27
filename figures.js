@@ -44,11 +44,30 @@ export const figures={
 };
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function wrapLabel(s,limit){let lines=[],line='';for(const w of s.split(' ')){if(line&&line.length+1+w.length>limit){lines.push(line);line=w}else line+=(line?' ':'')+w}if(line)lines.push(line);return lines}
-export function renderFigure(id){const f=figures[id];if(!f)return '';const W=720,labelW=124,gap=22,rowH=70,pad=10,H=f.rows.length*rowH+pad*2;
- let body=f.rows.map((r,i)=>{let y=pad+i*rowH,n=r.length-1,bw=(W-labelW-pad*2-(n-1)*gap)/n;
+
+// Dedicated visual encodings where relative length, branching, graph edges or timing matter.
+const txt=(x,y,s,align='middle',cls='')=>'<text x="'+x+'" y="'+y+'" text-anchor="'+align+'" class="'+cls+'">'+esc(s)+'</text>';
+const rect=(x,y,w,h,cls='svg-node')=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" class="'+cls+'"/>';
+const line=(x1,y1,x2,y2,cls='svg-arrow')=>'<path d="M'+x1+' '+y1+'L'+x2+' '+y2+'" class="'+cls+'"/>';
+function arrow(x1,y1,x2,y2){let a=Math.atan2(y2-y1,x2-x1),h=9;return line(x1,y1,x2,y2)+line(x2,y2,x2-h*Math.cos(a-.55),y2-h*Math.sin(a-.55))+line(x2,y2,x2-h*Math.cos(a+.55),y2-h*Math.sin(a+.55))}
+function box(x,y,w,h,labels,cls='svg-node'){return rect(x,y,w,h,cls)+labels.map((s,i)=>txt(x+w/2,y+h/2-(labels.length-1)*8+5+i*16,s)).join('')}
+function specialized(id){
+ if(id==='7a'){let b='';const x=115,k=40;for(const [j,label,seq] of [[0,'FIFO',[['A',0,8],['B',8,12],['C',12,14]]],[1,'SJF',[['C',0,2],['B',2,6],['A',6,14]]]]){let y=35+j*78;b+=txt(12,y+25,label,'start','svg-rowlabel');for(const [name,start,end] of seq){b+=rect(x+k*start,y,k*(end-start),42,'svg-job-'+name)+txt(x+k*(start+end)/2,y+25,name);b+=txt(x+k*start,y+60,String(start));}b+=txt(x+k*14,y+60,'14')}return{h:200,b:b+txt(115,194,'Time (CPU units)','start')}}
+ if(id==='4b'){let b=box(55,45,155,60,['Ready','eligible'])+box(495,45,155,60,['Running','owns CPU'])+box(275,205,170,60,['Blocked','waits for event']);b+=arrow(210,62,495,62)+txt(352,50,'dispatch')+arrow(495,91,210,91)+txt(352,112,'preempt');b+=arrow(550,105,425,205)+txt(563,166,'wait for I/O')+arrow(290,205,151,105)+txt(170,178,'I/O completion');return{h:290,b}}
+ if(id==='5a'){let b=box(270,12,180,48,['P before fork'])+box(70,110,230,72,['Parent P','returns child PID','x = 7'])+box(420,110,230,72,['Child C','returns 0','x = 12 after write']);b+=arrow(330,60,185,110)+arrow(390,60,535,110)+box(420,225,230,44,['Child exits'])+box(70,225,230,44,['Parent wait returns']);b+=arrow(535,182,535,225)+arrow(420,247,300,247)+txt(360,238,'dependency');return{h:285,b}}
+ if(id==='18a'){let b=txt(65,22,'VA 53','start','svg-rowlabel')+box(170,8,280,55,['VPN = 3','floor(53 / 16)'])+box(450,8,200,55,['Offset = 5','53 mod 16']);b+=arrow(310,63,310,100)+box(205,100,210,54,['Page table','VPN 3 → PFN 9'])+arrow(310,154,310,191)+box(170,191,280,55,['PFN 9 × 16 = 144'])+box(450,191,200,55,['Offset = 5'])+line(550,63,550,191,'svg-dashed')+txt(570,130,'unchanged','start')+txt(65,215,'PA 149','start','svg-rowlabel');return{h:264,b}}
+ if(id==='22c'){const pts=[[360,55,'A: 1'],[520,185,'B: 0'],[200,185,'C: 1']];let b='';for(const [x,y,label] of pts)b+=box(x-65,y-25,130,50,[label]);b+=arrow(410,80,482,157)+arrow(455,185,265,185)+arrow(238,157,310,80)+txt(360,120,'clock hand starts at A')+txt(360,230,'Clear A → inspect B → evict B → install X → hand C');return{h:250,b}}
+ if(id==='32b'){let b=box(65,42,180,60,['T1 holds A'])+box(475,42,180,60,['T2 holds B']);b+=arrow(245,58,475,58)+txt(360,43,'waits for B')+arrow(475,87,245,87)+txt(360,112,'waits for A');b+=txt(360,144,'Cycle: neither thread can release under this protocol','middle','svg-rowlabel')+box(65,180,180,48,['Both acquire A first'])+box(275,180,170,48,['One holds A and B'])+box(475,180,180,48,['Other waits for A']);b+=arrow(245,204,275,204)+arrow(445,204,475,204);return{h:246,b}}
+ if(id==='38b'){let b='';for(let i=0;i<4;i++){let x=35+i*165;b+=txt(x+72,25,['Disk 0','Disk 1','Disk 2','Parity'][i])+box(x,38,144,60,[['A = 110','B = 011','C = 101','P = 000'][i]],i===3?'svg-final':'svg-node');b+=box(x,118,144,55,[['110','missing','101','000'][i]],i===1?'svg-dashed':'svg-node')}b+=txt(360,204,'000 XOR 110 XOR 101 = 011')+box(275,225,170,48,['Recovered B = 3'],'svg-final');return{h:285,b}}
+ if(id==='47b'){let b=txt(135,22,'Sender','middle','svg-rowlabel')+txt(585,22,'Receiver','middle','svg-rowlabel')+line(135,30,135,310,'svg-dashed')+line(585,30,585,310,'svg-dashed');b+=arrow(135,50,585,82)+txt(355,48,'send seq=1')+txt(580,104,'deliver 1; expected=2','end');b+=line(585,120,360,145,'svg-dashed')+line(350,138,366,152)+line(366,138,350,152)+txt(405,115,'ACK 1 lost');b+=txt(145,168,'timeout','start')+arrow(135,185,585,217)+txt(355,184,'retry seq=1')+txt(580,238,'old ID: no redelivery','end');b+=arrow(585,255,135,292)+txt(355,259,'ACK 1')+txt(145,308,'discard saved message','start');return{h:325,b}}
+ return null;
+}
+
+export function renderFigure(id){const f=figures[id];if(!f)return '';const W=720,labelW=124,gap=22,rowH=82,pad=10,custom=specialized(id),H=custom?.h??f.rows.length*rowH+pad*2;
+ let body=custom?.b??f.rows.map((r,i)=>{let y=pad+i*rowH,n=r.length-1,bw=(W-labelW-pad*2-(n-1)*gap)/n;
  let labels=wrapLabel(r[0],16);let out='<text x="10" y="'+(y+25)+'" class="svg-rowlabel">'+labels.map((l,j)=>'<tspan x="10" dy="'+(j?16:0)+'">'+esc(l)+'</tspan>').join('')+'</text>';
- for(let j=0;j<n;j++){let x=labelW+pad+j*(bw+gap),lines=wrapLabel(r[j+1],Math.max(12,Math.floor(bw/7.3))),cy=y+29-(lines.length-1)*7.5;
- out+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="58" class="svg-node '+(i===f.rows.length-1?'svg-final':'')+'"/><text x="'+(x+bw/2)+'" y="'+cy+'" text-anchor="middle">'+lines.map((l,k)=>'<tspan x="'+(x+bw/2)+'" dy="'+(k?15:0)+'">'+esc(l)+'</tspan>').join('')+'</text>';
- if(f.flow&&j<n-1){let ax=x+bw+3,ay=y+29;out+='<path d="M'+ax+' '+ay+'h'+(gap-6)+' m-5 -5 l5 5 l-5 5" class="svg-arrow"/>'}}
+ for(let j=0;j<n;j++){let x=labelW+pad+j*(bw+gap),lines=wrapLabel(r[j+1],Math.max(12,Math.floor(bw/7.3))),cy=y+35-(lines.length-1)*7.5;
+ out+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="70" class="svg-node '+(i===f.rows.length-1?'svg-final':'')+'"/><text x="'+(x+bw/2)+'" y="'+cy+'" text-anchor="middle">'+lines.map((l,k)=>'<tspan x="'+(x+bw/2)+'" dy="'+(k?15:0)+'">'+esc(l)+'</tspan>').join('')+'</text>';
+ if(f.flow&&j<n-1){let ax=x+bw+3,ay=y+35;out+='<path d="M'+ax+' '+ay+'h'+(gap-6)+' m-5 -5 l5 5 l-5 5" class="svg-arrow"/>'}}
  return out}).join('');
  return '<figure class="learning-figure"><div class="figure-scroll"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+esc(f.title+'. '+f.caption)+'" viewBox="0 0 '+W+' '+H+'">'+body+'</svg></div><figcaption><strong>'+esc(f.title)+'</strong> — '+esc(f.caption)+'</figcaption></figure>'}
