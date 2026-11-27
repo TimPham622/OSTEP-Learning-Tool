@@ -28,7 +28,7 @@ Visit http://localhost:8000. Localhost and the deployed site have separate brows
 - The next chapter unlocks. Manual unlock is available without awarding mastery. Due reviews do not block progression.
 - Review each mastered detailed unit (or compact chapter) independently after 1, 3, 7, 14, 30 and 60 days; failing retrieval resets that item's interval to one day.
 - Export progress regularly in Preferences. Local storage can be cleared or evicted. The PDF and model weights are not included in exported progress.
-- All 39 substantive chapters (2, 4–10, 13–23, 26–33, 36–44 and 47–49) now have 90 detailed, sequential learning units (16 introduction/CPU, 24 memory, 20 concurrency, 21 persistence, 9 distribution) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. All substantive chapters now use the detailed renderer and topic-specific quizzes; a comprehensive pedagogical and technical audit remains. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
+- All 39 substantive chapters (2, 4–10, 13–23, 26–33, 36–44 and 47–49) now have 90 detailed, sequential learning units (16 introduction/CPU, 24 memory, 20 concurrency, 21 persistence, 9 distribution) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. All substantive chapters now use the detailed renderer and topic-specific quizzes; a first structural and targeted pedagogical audit is documented in PEDAGOGY-AUDIT.md. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
 
 ## Local AI (optional, free)
 
@@ -104,7 +104,7 @@ The original textbook is by Remzi H. and Andrea C. Arpaci-Dusseau, https://ostep
 
 ## Known limitations / verification
 
-The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. All substantive chapters have received detailed expansions; a full pedagogical audit, project expansion and end-to-end verification remain. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
+The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. All substantive chapters have received detailed expansions and a structural/targeted pedagogical audit; further editorial review, project expansion and end-to-end verification remain. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
 
 ## Detailed learning units (current expansion)
 
@@ -204,3 +204,7 @@ Native exercises use disposable directories and bounded files only. Never simula
 - **NFS/AFS costs:** historical per-block model from chapter 49; vary cache fit, workload and network/disk/memory cost. Not a benchmark of current protocol versions.
 
 The detailed curriculum now spans all 39 substantive chapters: 90 units, 180 worked examples, 180 direct-transfer exercises, 180 variation exercises, 90 multipart synthesis prompts and 450 quiz questions. The Laboratory contains 33 teaching models. The regression test definitions were executed against the fetched source in a JavaScript test harness (115 cases, 1,533 assertions); actual Node npm test and live browser flows have not been independently executed here. Remaining work: pedagogical/content audit, expanded practical project specifications/tests, browser and local AI verification.
+
+### Pedagogical audit and visual learning aids
+
+See [PEDAGOGY-AUDIT.md](PEDAGOGY-AUDIT.md). All 90 units now include topic-specific structural anatomy, two coach notes, corrected exercise references, progressive hints, a consolidated answer key and 39 original SVG figures across all chapters. Sixteen optional full-trace exercises deepen direct transfer without changing required mastery gates. All 299 numbered section headings are included in the assigned reading ranges; eight underdeveloped units received targeted source-based additions. This does not prove exhaustive conceptual coverage. Latest JavaScript harness rerun: 119 cases and 4,241 assertions, 14 source files syntax-checked. Actual Node runner, browser, native assignments and model inference remain unverified.
