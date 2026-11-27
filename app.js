@@ -60,7 +60,7 @@ else{
  refButton.onclick=()=>{if(focus){currentPane='examples';renderPane();let ex=pane.querySelector('[data-example="'+focus.example+'"]');let el=ex?.querySelector('[data-step="'+focus.steps[0]+'"]');if(el){el.classList.add('step-focus');el.scrollIntoView({block:'nearest'})}}};
  if(draft.output)display(draft.output.result,draft.output.ctx);
  const ask=async mode=>{
-  const attempt=input.value.trim();if(!attempt&&draft.kind==='explain'){status.textContent='Enter a question first.';return}
+  if(input.value.length>2800){status.textContent='This imported attempt exceeds 2,800 characters. Shorten it to the specific transition or rubric argument you want reviewed.';return}const attempt=input.value.trim();if(!attempt&&draft.kind==='explain'){status.textContent='Enter a question first.';return}
   draft.attempt=input.value;task=tutorTask(u,draft.kind,draft.key,attempt);
   if(task.kind==='explain'){task.question=attempt;task.attempt=''}
   const ctx=contextFor(u,task,ref);const job=new AbortController();tutorJob=job;button.disabled=offline.disabled=input.disabled=true;cancel.disabled=false;refButton.hidden=true;out.textContent='';status.textContent='Preparing selected lesson context…';
