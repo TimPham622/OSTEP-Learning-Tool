@@ -21,3 +21,6 @@
 .learning-figure .svg-job-A{fill:var(--paper);stroke:var(--ink)}
 .learning-figure .svg-job-B{fill:var(--panel);stroke:var(--ink)}
 .learning-figure .svg-job-C{fill:var(--line);fill-opacity:.35;stroke:var(--ink)}
+
+/* Practical project track */
+.project-kit{border-top:1px solid var(--line);padding:1em 0;margin-top:1em;scroll-margin-top:1em}.project-kit details{border:1px solid var(--line);padding:.75em;background:var(--panel)}.project-kit summary{cursor:pointer;font-weight:bold}.project-check{display:flex!important;align-items:flex-start;gap:.5em;margin:.5em 0}.project-check input{flex:none;margin-top:.3em}.project-command{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}.project-kit textarea{width:100%}.project-kit[hidden]{display:none}
