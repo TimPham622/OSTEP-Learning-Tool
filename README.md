@@ -28,7 +28,7 @@ Visit http://localhost:8000. Localhost and the deployed site have separate brows
 - The next chapter unlocks. Manual unlock is available without awarding mastery. Due reviews do not block progression.
 - Review each mastered detailed unit (or compact chapter) independently after 1, 3, 7, 14, 30 and 60 days; failing retrieval resets that item's interval to one day.
 - Export progress regularly in Preferences. Local storage can be cleared or evicted. The PDF and model weights are not included in exported progress.
-- Chapters 2, 4–10 and 13–23 now have 40 detailed, sequential learning units (16 introduction/CPU, 24 memory) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. The remaining 20 substantive chapters retain the first-pass chapter-level material and generic quizzes; they still need a detailed curriculum expansion. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
+- Chapters 2, 4–10, 13–23 and 26–33 now have 60 detailed, sequential learning units (16 introduction/CPU, 24 memory, 20 concurrency) with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. The remaining 12 substantive chapters retain the first-pass chapter-level material and generic quizzes; they still need a detailed curriculum expansion. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
 
 ## Local AI (optional, free)
 
@@ -92,6 +92,7 @@ Package availability and the required compiler vary by distro and xv6 revision; 
 - reading.js — physical PDF page ranges verified against the supplied PDF
 - cpu-depth.js — expanded introduction and CPU virtualization content
 - memory-depth.js — expanded memory virtualization content
+- concurrency-depth.js — expanded concurrency content
 - depth.js — shared detailed-unit renderer and mastery rules
 - tests/curriculum.test.js — automated regression checks
 
@@ -101,7 +102,7 @@ The original textbook is by Remzi H. and Andrea C. Arpaci-Dusseau, https://ostep
 
 ## Known limitations / verification
 
-The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. The introduction, CPU virtualization and memory virtualization have received detailed expansions; concurrency, persistence and distribution still need comparable work. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
+The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. The introduction, CPU virtualization, memory virtualization and concurrency have received detailed expansions; persistence and distribution still need comparable work. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
 
 ## Detailed learning units (current expansion)
 
@@ -127,6 +128,14 @@ The source has been committed, but a deployed browser session and local AI have 
 | 21 | Present bits and faults; eviction and background reclaim |
 | 22 | OPT/FIFO; random/LRU; clock and thrashing |
 | 23 | VAX/VMS mapping; segmented FIFO; demand zeroing and copy-on-write |
+| 26 | Thread state and sharing; lost updates and atomicity |
+| 27 | Creation/join/lifetime; mutex and condition-variable APIs |
+| 28 | Lock correctness and interrupt masking; atomic primitives; ticket and sleeping locks |
+| 29 | Precise/approximate counters; lists, queues and hash tables |
+| 30 | Predicate waits; bounded buffers; covering conditions |
+| 31 | Permits and ordering; semaphore buffers; reader-writer locks and dining philosophers |
+| 32 | Atomicity/order violations; deadlock prevention; avoidance/detection/recovery |
+| 33 | Readiness and select/poll; asynchronous I/O and continuation state |
 
 Each unit has independent mastery checks, written reasoning, practical evidence, and its own spaced repetition schedule. A chapter is mastered only when all its units are mastered. Overrides unlock without awarding mastery. Existing chapter-level attempts are retained; previously mastered expanded chapters require the new checks and retain their previous mastery history. Export a backup before substantial updates.
 
@@ -138,7 +147,7 @@ With Node.js installed (no npm dependencies required), clone the repository and 
 npm test
 ```
 
-The suite checks PDF range containment, unique unit identifiers, exercise and quiz structure, accepted answers, blank answer rejection, mastery thresholds, prerequisite unlocks, overrides and representative scheduling, page replacement, clock, free-list allocation, segmentation and two-level page-table traces. Browser rendering, IndexedDB import, deployment and local AI still require manual testing.
+The suite checks PDF range containment, unique unit identifiers, exercise and quiz structure, accepted answers, blank answer rejection, mastery thresholds, prerequisite unlocks, overrides and representative scheduling, page replacement, clock, free-list allocation, segmentation, two-level page-table traces, lock ownership, ticket ordering, semaphore permits, condition-variable wakeups and event-loop latency. Browser rendering, IndexedDB import, deployment and local AI still require manual testing.
 
 ### Memory laboratory additions
 
@@ -148,3 +157,13 @@ The suite checks PDF range containment, unique unit identifiers, exercise and qu
 - **Clock replacement:** trace frame contents, reference bits, hand movement, cleared bits and victims. New pages set their reference bit and advance the hand in this model.
 
 Use assigned sections in your imported PDF for the source theory; the worked workloads are original examples. Native memory experiments should use bounded allocations; do not force host swapping. Earlier compact mastery and answers are retained in local history, but expanded chapters must satisfy the new unit gates. Export a backup before updating if you have progress you wish to retain.
+
+### Concurrency laboratory additions
+
+- **Check/set versus atomic exchange:** select individual thread operations and observe the flag, owners and mutual-exclusion violations. Illustrative instruction-level model, not a definition of C data-race behaviour.
+- **Ticket lock:** trace arrivals, tickets, current turn, ownership and FIFO admission. Assumes no wraparound or abandoned tickets.
+- **Semaphore wait/post:** trace stored permits, blocked threads and direct handoffs. FIFO handoff is a teaching convention, not a portable POSIX guarantee.
+- **Condition wait and stolen wakeup:** trace count, sleeping consumers and woken consumers, who explicitly retry under a mutex. Producer blocking is excluded from this model.
+- **Event loop:** compare blocking versus asynchronous disk work and unrelated socket response delay; assumes zero handler overhead and nonblocking async submission.
+
+The concurrency lessons include original counterexamples and C investigations. Use portable pthread APIs on macOS; use the Linux VM for unnamed POSIX semaphores and Linux-specific experiments. Keep intentionally deadlocking traces on paper or in the browser model rather than hanging native programs. Written arguments and practical evidence are self-assessed; automated checks validate model behaviour and data structure, not every teaching claim or browser flow.
