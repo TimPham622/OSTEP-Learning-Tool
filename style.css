@@ -16,3 +16,8 @@
 .answer-key{border-top:1px solid var(--line);margin:1em 0;padding-top:.5em}
 .answer-key details{margin:.4em 0;padding:.3em .5em;border:1px solid var(--line)}
 .answer-key summary{cursor:pointer}
+
+.learning-figure .svg-dashed{stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.learning-figure .svg-job-A{fill:var(--paper);stroke:var(--ink)}
+.learning-figure .svg-job-B{fill:var(--panel);stroke:var(--ink)}
+.learning-figure .svg-job-C{fill:var(--line);fill-opacity:.35;stroke:var(--ink)}
