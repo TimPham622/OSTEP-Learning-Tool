@@ -16,7 +16,7 @@ test('detailed units cover introduction, CPU, memory, concurrency, persistence a
  assert.deepEqual(Object.keys(cpu).map(Number),[2,4,5,6,7,8,9,10]);
  assert.equal(new Set(all.map(u=>u.id)).size,all.length);
  assert.deepEqual(Object.keys(memory).map(Number),[13,14,15,16,17,18,19,20,21,22,23]);
- assert.equal(Object.values(cpu).flat().length,16);assert.equal(Object.values(memory).flat().length,24);assert.deepEqual(Object.keys(concurrency).map(Number),[26,27,28,29,30,31,32,33]);assert.equal(Object.values(concurrency).flat().length,20);assert.deepEqual(Object.keys(persistence).map(Number),[36,37,38,39,40,41,42,43,44]);assert.equal(Object.values(persistence).flat().length,21);assert.deepEqual(Object.keys(distribution).map(Number),[47,48,49]);assert.equal(Object.values(distribution).flat().length,9);assert.equal(all.length,90);
+ assert.equal(Object.values(cpu).flat().length,16);assert.equal(Object.values(memory).flat().length,24);assert.deepEqual(Object.keys(concurrency).map(Number),[26,27,28,29,30,31,32,33]);assert.equal(Object.values(concurrency).flat().length,20);assert.deepEqual(Object.keys(persistence).map(Number),[36,37,38,39,40,41,42,43,44]);assert.equal(Object.values(persistence).flat().length,21);assert.deepEqual(Object.keys(distribution).map(Number),[47,48,49]);assert.equal(Object.values(distribution).flat().length,9);assert.equal(all.length,103);assert.deepEqual(Object.keys(detailed).map(Number).slice(-6),[51,52,53,54,55,56]);
 });
 for(const [ch,units] of Object.entries(detailed))for(const u of units)test(u.id+' content structure and grading',()=>{
  assert.ok(u.pages[0]>=pdfRanges[ch][0]&&u.pages[1]<=pdfRanges[ch][1]);
@@ -194,7 +194,7 @@ test('audited page coverage includes every physical page in the assigned chapter
  for(const [ch,units] of Object.entries(detailed))for(let p=pdfRanges[ch][0];p<=pdfRanges[ch][1];p++)assert.ok(units.some(u=>u.pages[0]<=p&&u.pages[1]>=p));
 });
 test('one accessible original SVG per substantive chapter',()=>{
- assert.equal(Object.keys(figures).length,39);
+ assert.equal(Object.keys(figures).length,45);
  assert.deepEqual([...new Set(Object.keys(figures).map(k=>Number(k.replace(/[a-z]+$/,''))))].sort((a,b)=>a-b),Object.keys(detailed).map(Number));
  for(const id of Object.keys(figures)){assert.ok(all.some(u=>u.id===id));let html=renderFigure(id);assert.ok(html.includes('<svg')&&html.includes('role="img"')&&html.includes('aria-label=')&&html.includes('<figcaption>')&&html.includes('</svg>'));}
  assert.equal(renderFigure('unknown'),'');
@@ -223,3 +223,5 @@ test('all laboratory default controls yield a result without errors',()=>{
   assert.ok(out.innerHTML);assert.equal(out.textContent,'');
  }
 });
+
+test('appendix coverage preserves original chapters and includes B D F G H I',()=>{const ids=[51,52,53,54,55,56];assert.deepEqual(ids.map(id=>detailed[id].length),[3,2,2,1,1,4]);assert.deepEqual(ids.map(id=>pdfRanges[id]),[[608,620],[622,634],[637,648],[649,652],[653,655],[656,675]]);for(const id of ids)for(const u of detailed[id]){assert.equal(u.refs.length,4);assert.ok(u.theory.length&&u.coach.length===2);}});

@@ -88,5 +88,5 @@ test('every detailed unit has valid deterministic context for all task kinds',()
    count++;
   }
  }
- assert.equal(count,646);
+ assert.equal(count,737);
 });

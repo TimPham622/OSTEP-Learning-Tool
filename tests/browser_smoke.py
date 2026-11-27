@@ -78,10 +78,10 @@ class BrowserTests(unittest.TestCase):
         self.page.locator("#main h1").wait_for()
 
     def test_navigation_and_theme(self):
-        self.assertEqual(self.page.locator("#toc a").count(),39)
+        self.assertEqual(self.page.locator("#toc a").count(),45)
         self.page.locator("#search").fill("paging")
         self.assertGreater(self.page.locator("#toc a").count(),0)
-        self.assertLess(self.page.locator("#toc a").count(),39)
+        self.assertLess(self.page.locator("#toc a").count(),45)
         self.page.locator("#search").fill("")
         self.page.locator("#theme").click()
         self.assertTrue(self.page.locator("body").evaluate("(e)=>e.classList.contains('dark')"))
@@ -137,7 +137,7 @@ class BrowserTests(unittest.TestCase):
 
     def test_all_unit_rendering_and_figures(self):
         units=self.page.evaluate("async()=>Object.entries((await import('./depth.js')).detailed).flatMap(([ch,us])=>us.map(u=>[ch,u.id]))")
-        self.assertEqual(len(units),90)
+        self.assertEqual(len(units),103)
         self.seed("""async()=>{let s=JSON.parse(localStorage.getItem('personal-ostep-v1'));let {detailed}=await import('./depth.js');for(const [ch,us] of Object.entries(detailed)){s.lessons[ch].override=true;for(const u of us)s.lessons[ch].units[u.id].override=true}localStorage.setItem('personal-ostep-v1',JSON.stringify(s))}""")
         svg_count=0
         for ch,uid in units:
@@ -148,7 +148,7 @@ class BrowserTests(unittest.TestCase):
             self.assertEqual(self.page.locator("#main [data-value]").count(),4)
             self.assertEqual(self.page.locator("#depth-quiz fieldset").count(),5)
             svg_count+=self.page.locator("#main .learning-figure svg[role=img]").count()
-        self.assertEqual(svg_count,39)
+        self.assertEqual(svg_count,45)
 
     def test_all_labs(self):
         self.route("lab")
