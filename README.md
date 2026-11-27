@@ -9,7 +9,7 @@ A personal, self-paced study tool for *Operating Systems: Three Easy Pieces* (up
 3. Choose **main** and **/(root)**, then **Save**.
 4. Wait for GitHub's deployment to finish (check Actions or the Pages settings).
 5. Open https://timpham622.github.io/OSTEP-Learning-Tool/ . The Pages URL is expected, not verified until deployment.
-6. In the Textbook pane, select your local v0.90 OSTEP PDF. It is stored in IndexedDB, not uploaded. The reader uses the browser's built-in PDF viewer and printed-page offset; if a browser ignores the page fragment, navigate manually.
+6. In the Textbook pane, select your local v0.90 OSTEP PDF. It is stored in IndexedDB, not uploaded. The reader uses the browser's built-in PDF viewer and verified physical PDF page ranges; if a browser ignores the page fragment, navigate manually.
 
 No build step, API key, account or server is required for the core site. For local testing:
 ```sh
@@ -26,9 +26,9 @@ Visit http://localhost:8000. Localhost and the deployed site have separate brows
 - Attempt direct transfer, structural variation and synthesis. Check answers only after attempting; hints refer to the worked example.
 - Pass the direct and variation items, quiz (80%), written and synthesis rubrics and practical evidence. Free-form gates are self-assessed; AI feedback is advisory, not a grading authority.
 - The next chapter unlocks. Manual unlock is available without awarding mastery. Due reviews do not block progression.
-- Review after 1, 3, 7, 14, 30 and 60 days; failing retrieval resets to one day.
+- Review each mastered detailed unit (or compact chapter) independently after 1, 3, 7, 14, 30 and 60 days; failing retrieval resets that item's interval to one day.
 - Export progress regularly in Preferences. Local storage can be cleared or evicted. The PDF and model weights are not included in exported progress.
-- The current content is a first-pass chapter-level course, with a single worked example and one exercise per tier per chapter. It does not yet constitute the requested detailed subsection curriculum or multiple examples and multiple exercises per tier; the data file is deliberately editable to expand it. Quiz distractors are generated from other chapters and need editorial improvement. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
+- Chapters 2 and 4–10 now have 16 detailed, sequential learning units with two annotated worked examples, two direct-transfer exercises, two variation exercises, one multipart synthesis, and five topic-specific quiz questions each. The remaining 31 substantive chapters retain the first-pass chapter-level material and generic quizzes; they still need a detailed curriculum expansion. Simulations are simplified models, not emulators. Practical exercises require external execution and self-reported evidence.
 
 ## Local AI (optional, free)
 
@@ -89,6 +89,10 @@ Package availability and the required compiler vary by distro and xv6 revision; 
 - app.js — navigation, mastery state, PDF import, quizzes and reviews
 - labs.js — deterministic interactive models
 - tutor.js — optional WebLLM / Ollama adapter
+- reading.js — physical PDF page ranges verified against the supplied PDF
+- cpu-depth.js — expanded introduction and CPU virtualization content
+- depth.js — shared detailed-unit renderer and mastery rules
+- tests/curriculum.test.js — automated regression checks
 
 ## Content attribution and scope
 
@@ -96,4 +100,29 @@ The original textbook is by Remzi H. and Andrea C. Arpaci-Dusseau, https://ostep
 
 ## Known limitations / verification
 
-The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. The current course is an initial coverage pass, not a completed textbook-grade learning experience. Expand chapter content and test before relying on mastery as evidence of competence.
+The source has been committed, but a deployed browser session and local AI have not been end-to-end tested. The built-in PDF viewer may vary by browser. Exact text matching may reject equivalent terminology. Written and project assessments are not independently verified. The introduction and CPU virtualization have received a detailed expansion; memory virtualization, concurrency, persistence and distribution still need comparable work. The automated tests validate data structure, gating, answer matching, scoring and representative simulator traces; they do not validate every pedagogical statement or a live browser session.
+
+## Detailed learning units (current expansion)
+
+| Chapter | Units |
+| --- | --- |
+| 2 | Virtual resources and system calls; concurrency, persistence and design goals |
+| 4 | Process creation; state transitions and process lists |
+| 5 | fork/wait; exec, file descriptors and shell composition |
+| 6 | Restricted operations and traps; timer interrupts and context switching |
+| 7 | FIFO/SJF; STCF; response, RR and I/O |
+| 8 | Feedback priorities; starvation, boosts and gaming tolerance |
+| 9 | Lottery and stride scheduling |
+| 10 | Caches and affinity; single and multiple queues |
+
+Each unit has independent mastery checks, written reasoning, practical evidence, and its own spaced repetition schedule. A chapter is mastered only when all its units are mastered. Overrides unlock without awarding mastery. Existing chapter-level attempts are retained; previously mastered expanded chapters require the new checks and retain their previous mastery history. Export a backup before substantial updates.
+
+### Regression tests
+
+With Node.js installed (no npm dependencies required), clone the repository and run:
+
+```sh
+npm test
+```
+
+The suite checks PDF range containment, unique unit identifiers, exercise and quiz structure, accepted answers, blank answer rejection, mastery thresholds, prerequisite unlocks, overrides and representative scheduling/page replacement traces. Browser rendering, IndexedDB import, deployment and local AI still require manual testing.
