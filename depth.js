@@ -1,7 +1,9 @@
 // Shared renderer and mastery rules for detailed learning units.
 import {cpu} from './cpu-depth.js';
+import {memory} from './memory-depth.js';
 import {mountLab} from './labs.js';
-export const detailed=cpu;
+export const detailed={...cpu,...memory};
+const unitLabs={'16a':'segment','16b':'segment','17a':'allocator','17b':'allocator','20b':'multilevel','22c':'clock'};
 const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const N=s=>String(s??'').trim().toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ').replace(/%$/,'');
 const list=(xs,tag='ul')=>'<'+tag+'>'+xs.map(x=>'<li>'+E(x)+'</li>').join('')+'</'+tag+'>';
@@ -36,7 +38,7 @@ $('#unit-body').innerHTML='<h2>'+E(u.sections+' — '+u.name)+'</h2><p class="me
 '<h2 id="depth-8">9. Mastery checklist</h2><div id="unit-status"></div><div class="actions">'+(i>0?'<button id="prev-unit">Previous unit</button>':'')+(i<units.length-1?'<button id="next-unit">Next unit</button>':'<a href="#home">Return to curriculum</a>')+'</div><p class="muted">Written, synthesis and practical criteria are self-assessed. AI is advisory. Both Tier 2 items are required because 1/2 is below 80%.</p>';
 all('[data-jump]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.jump).scrollIntoView());
 $('#pin').onclick=()=>api.reference('examples');
-if(l[13])mountLab($('#depth-lab'),l[13]);
+const lab=unitLabs[u.id]||l[13];if(lab)mountLab($('#depth-lab'),lab);
 const items={};u.direct.forEach((p,i)=>items['d'+i]=p);u.variation.forEach((p,i)=>items['v'+i]=p);
 all('[data-value]').forEach(el=>el.oninput=()=>{let k=el.dataset.value;s.answers[k]=el.value;s.checks[k]=false;$('#status-'+k).textContent='Not yet checked.';update()});
 all('[data-check]').forEach(b=>b.onclick=()=>{let k=b.dataset.check,p=items[k];s.checks[k]=matches(s.answers[k],p[1]);s.attempts.push({kind:'practice',key:k,answer:s.answers[k]||'',correct:s.checks[k],time:Date.now()});$('#status-'+k).textContent=s.checks[k]?'Correct. Justify the result using the worked example.':'Not matched. '+p[2]+' Exact matching may reject synonyms; compare accepted terminology.';update()});
