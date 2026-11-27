@@ -209,3 +209,7 @@ test('quiz choices are reproducible within attempt and vary across retries',()=>
  assert.deepEqual(quizChoices('7a',0,1),quizChoices('7a',0,1));
  assert.ok(new Set(Array.from({length:10},(_,i)=>quizChoices('7a',0,i).join(','))).size>1);
 });
+
+test('scheduler ties follow project ID convention, RR arrival boundary and input validation',()=>{assert.deepEqual(schedule([2,4,1],[1,0,0],'SJF').jobs.map(j=>j.end),[3,7,1]);assert.deepEqual(schedule([2,4],[2,0],'STCF').jobs.map(j=>j.end),[4,6]);assert.deepEqual(schedule([4,1],[0,2],'RR',2).jobs.map(j=>j.end),[5,3]);});
+test('fixed frame slots and OPT tie convention',()=>{const r=replace([1,2,3,4],2,'OPT');assert.equal(r.rows[2][2],1);assert.equal(r.rows[3][2],3);assert.equal(r.rows[3][3],'4, 2');});
+test('quiz rejects non-answer coercions',()=>{assert.equal(gradeQuiz([['q']], [false]).score,0);assert.equal(gradeQuiz([['q']], [' ']).score,0);assert.equal(gradeQuiz([['q']], [0]).score,100)});
