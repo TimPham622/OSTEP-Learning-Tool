@@ -6,10 +6,11 @@ import {concurrency} from '../concurrency-depth.js';
 import {persistence} from '../persistence-depth.js';
 import {distribution} from '../distribution-depth.js';
 import {pdfRanges} from '../reading.js';
-import {matches,unitState,unitPassed,chapterPassed,unitUnlocked,gradeQuiz,selectedUnit} from '../depth.js';
+import {matches,unitState,unitPassed,chapterPassed,unitUnlocked,gradeQuiz,selectedUnit,detailed,renderExamples} from '../depth.js';
+import {exerciseReference,stepHint,quizChoices,mappings,anatomyNotes,transferTasks,auditUnits} from '../pedagogy-audit.js';
+import {figures,renderFigure} from '../figures.js';
 import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate,lockTrace,ticketTrace,semaphoreTrace,conditionTrace,eventTrace,diskTiming,raidMap,xorParity,inodeTrace,appendCrash,journalCrash,logTrace,checksum,verifyBlock,retryTrace,nfsHandleTrace,stableWrite,cacheTrace,afsCost} from '../labs.js';
 
-const detailed={...cpu,...memory,...concurrency,...persistence,...distribution};
 const all=Object.values(detailed).flat();
 test('detailed units cover introduction, CPU, memory, concurrency, persistence and distribution chapters with unique IDs',()=>{
  assert.deepEqual(Object.keys(cpu).map(Number),[2,4,5,6,7,8,9,10]);
@@ -27,6 +28,11 @@ for(const [ch,units] of Object.entries(detailed))for(const u of units)test(u.id+
  assert.equal(gradeQuiz(u.quiz,[null,'0','0','0','1']).score,60);
  for(const p of [...u.direct,...u.variation])assert.ok(matches(p[1].split('|')[0],p[1]));
  assert.equal(matches('',u.direct[0][1]),false);
+ assert.ok(u.anatomy&&u.coach.length===2);
+ assert.ok(u.examples.every(ex=>ex.slice(1).every(s=>/\{[^}]+\}/.test(s))));
+ for(const key of ['d0','d1','v0','v1']){const ref=exerciseReference(u,key);assert.ok(ref.label&&stepHint(u,key));if(key.startsWith('d'))assert.ok(ref.example);if(ref.example)assert.ok(ref.steps.every(n=>n>=1&&n<u.examples[ref.example-1].length));}
+ assert.ok(renderExamples(u).includes('data-step="1"'));
+ for(let j=0;j<5;j++){assert.deepEqual([...quizChoices(u.id,j,0)].sort(),[1,2,3,4]);assert.deepEqual([...quizChoices(u.id,j,1)].sort(),[1,2,3,4]);}
 });
 test('mastery lock, pass gates, relock, and manual override',()=>{
  const r={},units=cpu[7],s=unitState(r,units[0]);
@@ -182,4 +188,24 @@ test('historical NFS/AFS workload costs',()=>{
  assert.deepEqual(afsCost(100,10,2,.1,'disk','reread'),{nfs:1000,afs:200,ratio:.2});
  assert.deepEqual(afsCost(100,10,2,.1,'disk','single write'),{nfs:10,afs:2000,ratio:200});
  assert.deepEqual(afsCost(100,10,2,.1,'memory','reread'),{nfs:10,afs:10,ratio:1});
+});
+
+test('audited page coverage includes every physical page in the assigned chapter ranges',()=>{
+ for(const [ch,units] of Object.entries(detailed))for(let p=pdfRanges[ch][0];p<=pdfRanges[ch][1];p++)assert.ok(units.some(u=>u.pages[0]<=p&&u.pages[1]>=p));
+});
+test('one accessible original SVG per substantive chapter',()=>{
+ assert.equal(Object.keys(figures).length,39);
+ assert.deepEqual([...new Set(Object.keys(figures).map(k=>Number(k.replace(/[a-z]+$/,''))))].sort((a,b)=>a-b),Object.keys(detailed).map(Number));
+ for(const id of Object.keys(figures)){assert.ok(all.some(u=>u.id===id));let html=renderFigure(id);assert.ok(html.includes('<svg')&&html.includes('role="img"')&&html.includes('aria-label=')&&html.includes('<figcaption>')&&html.includes('</svg>'));}
+ assert.equal(renderFigure('unknown'),'');
+});
+test('audit references, anatomy and optional full traces preserve source material',()=>{
+ assert.equal(Object.keys(mappings).length,90);assert.equal(Object.keys(anatomyNotes).length,90);assert.equal(Object.keys(transferTasks).length,16);
+ assert.equal(all.filter(u=>u.transfer).length,16);
+ for(const u of all.filter(u=>u.transfer))assert.equal(u.transfer.length,4);
+ const original=cpu[4][0];const before=JSON.stringify(original);const copy=auditUnits({4:cpu[4]});assert.equal(JSON.stringify(original),before);assert.ok(copy[4][0]!==original);
+});
+test('quiz choices are reproducible within attempt and vary across retries',()=>{
+ assert.deepEqual(quizChoices('7a',0,1),quizChoices('7a',0,1));
+ assert.ok(new Set(Array.from({length:10},(_,i)=>quizChoices('7a',0,i).join(','))).size>1);
 });
