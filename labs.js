@@ -5,9 +5,56 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const table=(heads,rows)=>'<table><thead><tr>'+heads.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
 const input=(id,label,val)=>'<label>'+label+' <input id="'+id+'" value="'+val+'"></label>';
 const select=(id,label,vals)=>'<label>'+label+' <select id="'+id+'">'+vals.map(v=>'<option>'+v+'</option>').join('')+'</select></label>';
-export const labNames={schedule:'CPU scheduling',fork:'Process creation tree',process:'Process state transitions',memory:'Base and bounds',paging:'Paging and TLB',replacement:'Page replacement',race:'Thread interleavings',semaphore:'Bounded buffer / semaphores',deadlock:'Deadlock wait-for graph',disk:'Disk scheduling',filesystem:'File system blocks and journal'};
+export const labNames={segment:'Segmentation (up/down)',allocator:'Free-list allocation',multilevel:'Two-level page-table walk',clock:'Clock / second chance',schedule:'CPU scheduling',fork:'Process creation tree',process:'Process state transitions',memory:'Base and bounds',paging:'Paging and TLB',replacement:'Page replacement',race:'Thread interleavings',semaphore:'Bounded buffer / semaphores',deadlock:'Deadlock wait-for graph',disk:'Disk scheduling',filesystem:'File system blocks and journal'};
 export function schedule(bursts,arrivals,policy,q=2){if(bursts.length!==arrivals.length)throw Error('One arrival per job required');let jobs=bursts.map((b,i)=>({id:String.fromCharCode(65+i),b,a:arrivals[i],r:b,start:null,end:null}));let t=0,last=null,quantum=0,ready=[],queued=new Set(),timeline=[];while(jobs.some(j=>j.r)){for(const j of jobs)if(j.a<=t&&j.r&&!queued.has(j.id)){ready.push(j);queued.add(j.id)};let avail=jobs.filter(j=>j.a<=t&&j.r);let j=null;if(policy==='RR'){if(last&&last.r&&quantum>=q){ready.push(last);last=null;quantum=0}if(!last||!last.r){last=ready.shift()||null;quantum=0}j=last}else if((policy==='FIFO'||policy==='SJF')&&last&&last.r)j=last;else{avail.sort((a,b)=>policy==='FIFO'?a.a-b.a||a.id.localeCompare(b.id):policy==='SJF'?a.b-b.b||a.a-b.a||a.id.localeCompare(b.id):a.r-b.r||a.a-b.a||a.id.localeCompare(b.id));j=avail[0]||null}if(j){if(j.start===null)j.start=t;j.r--;if(!j.r)j.end=t+1;quantum++}timeline.push(j?j.id:'idle');last=j;t++;if(t>3000)throw Error('Workload too large')}return {timeline,jobs}}
 export function replace(refs,n,policy){let f=[],recent=new Map(),rows=[],miss=0;refs.forEach((x,i)=>{let hit=f.includes(x),victim='—';if(!hit){miss++;if(f.length===n){let k=0;if(policy==='LRU')k=f.reduce((best,v,j)=>recent.get(v)<recent.get(f[best])?j:best,0);if(policy==='OPT'){let next=v=>{let p=refs.indexOf(v,i+1);return p<0?Infinity:p};k=f.reduce((best,v,j)=>next(v)>next(f[best])?j:best,0)}victim=f.splice(k,1)[0]}f.push(x)}recent.set(x,i);rows.push([x,hit?'hit':'miss',victim,f.join(', ')])});return{rows,miss}}
+
+// Additional memory models: deterministic, bounded and intentionally simplified.
+export function walkTwoLevel(va,pageSize,entrySize,root,dirs,leaves){
+ if(!Number.isSafeInteger(va)||va<0||!Number.isSafeInteger(pageSize)||pageSize<=0||!Number.isSafeInteger(entrySize)||entrySize<=0||pageSize%entrySize!==0)throw Error('Invalid address or table dimensions');
+ const entries=pageSize/entrySize,vpn=Math.floor(va/pageSize),offset=va%pageSize,directory=Math.floor(vpn/entries),leaf=vpn%entries;
+ const result={vpn,offset,directory,leaf,pdeAddress:root+directory*entrySize,pteAddress:null,pa:null,status:'missing directory'};
+ if(directory>=entries){result.status='VA outside two-level address space';return result}
+ if(!Object.hasOwn(dirs,directory))return result;
+ result.pteAddress=dirs[directory]+leaf*entrySize;result.status='invalid PTE';
+ const key=directory+':'+leaf;if(!Object.hasOwn(leaves,key))return result;
+ result.pa=leaves[key]*pageSize+offset;result.status='valid';return result;
+}
+export function clockReplace(refs,capacity){
+ if(!Number.isSafeInteger(capacity)||capacity<1||capacity>32)throw Error('Capacity must be 1–32');
+ let frames=Array(capacity).fill(null),bits=Array(capacity).fill(0),hand=0,rows=[],misses=0;
+ for(const page of refs){let slot=frames.indexOf(page),victim='—',scans=[];
+ if(slot>=0){bits[slot]=1;rows.push({page,result:'hit',victim,frames:[...frames],bits:[...bits],hand,scans});continue}
+ misses++;
+ while(frames[hand]!==null&&bits[hand]){scans.push('clear '+hand);bits[hand]=0;hand=(hand+1)%capacity}
+ victim=frames[hand]??'—';scans.push('install '+hand);frames[hand]=page;bits[hand]=1;hand=(hand+1)%capacity;
+ rows.push({page,result:'miss',victim,frames:[...frames],bits:[...bits],hand,scans})}
+ return{misses,rows};
+}
+export function allocateTrace(capacity,operations,policy='first'){
+ if(!Number.isSafeInteger(capacity)||capacity<1||capacity>65536)throw Error('Capacity must be 1–65536');
+ if(!['first','best','worst'].includes(policy))throw Error('Unknown policy');
+ let holes=[{start:0,size:capacity}],live=new Map(),rows=[];
+ for(const op of operations){let result;
+ if(op.type==='alloc'){if(!op.id||live.has(op.id)||!Number.isSafeInteger(op.size)||op.size<1)throw Error('Invalid allocation or duplicate live ID');
+ let candidates=holes.map((h,i)=>({...h,i})).filter(h=>h.size>=op.size);
+ if(policy==='best')candidates.sort((a,b)=>a.size-b.size||a.start-b.start);if(policy==='worst')candidates.sort((a,b)=>b.size-a.size||a.start-b.start);
+ if(!candidates.length)result='failed';
+ else{let h=holes[candidates[0].i],start=h.start;live.set(op.id,{start,size:op.size});h.start+=op.size;h.size-=op.size;if(h.size===0)holes.splice(candidates[0].i,1);result='allocated ['+start+','+(start+op.size)+')'}
+ }else if(op.type==='free'){if(!live.has(op.id))throw Error('Unknown live allocation: '+op.id);holes.push(live.get(op.id));live.delete(op.id);holes.sort((a,b)=>a.start-b.start);let merged=[];for(const h of holes){let last=merged.at(-1);if(last&&last.start+last.size===h.start)last.size+=h.size;else merged.push({...h})}holes=merged;result='freed and coalesced'}else throw Error('Unknown operation');
+ rows.push({op:op.type+' '+op.id+(op.type==='alloc'?' '+op.size:''),result,holes:holes.map(h=>({...h})),totalFree:holes.reduce((s,h)=>s+h.size,0),largest:Math.max(0,...holes.map(h=>h.size))})}
+ return rows;
+}
+export function segmentTranslate(va,offsetBits,segments){
+ if(!Number.isSafeInteger(va)||va<0||!Number.isSafeInteger(offsetBits)||offsetBits<1||offsetBits>20)throw Error('Invalid address or offset width');
+ const capacity=2**offsetBits,selector=Math.floor(va/capacity),offset=va%capacity,s=segments[selector];
+ if(!s)return{selector,offset,displacement:null,pa:null,status:'unmapped segment'};
+ const displacement=s.down?offset-capacity:offset;
+ if(s.length>capacity||s.length<0||!Number.isSafeInteger(s.length)||!Number.isSafeInteger(s.base)||s.base<0||(s.down&&s.base<s.length))throw Error('Invalid segment descriptor');
+ const valid=s.down?displacement>=-s.length&&displacement<0:displacement<s.length;
+ return{selector,offset,displacement,pa:valid?s.base+displacement:null,status:valid?'valid':'bounds fault'};
+}
+
 export function mountLab(host,type){
 let body='',run;
 const val=id=>host.querySelector('#'+id).value;
@@ -21,6 +68,10 @@ else if(type==='race'){body=input('start','Initial counter','0')+input('order','
 else if(type==='semaphore'){body=input('capacity','Capacity','3')+input('ops','Completed operations: P=produce, C=consume','P,P,C,P,P,P,C');run=()=>{let n=int(val('capacity'),1,20),count=0;return table(['Operation','Outcome','empty','full'],val('ops').toUpperCase().split(/[, ]+/).map(op=>{let ok=op==='P'?count<n:op==='C'?count>0:false;if(!['P','C'].includes(op))throw Error('Use P or C');if(ok)count+=op==='P'?1:-1;return[op,ok?'completed':'would block (not queued in this model)',n-count,count]}))}}
 else if(type==='deadlock'){body=input('edges','Wait-for edges (thread:thread)','A:B,B:C,C:A');run=()=>{let edges=val('edges').split(/[, ]+/).map(x=>x.split(':'));if(edges.some(e=>e.length!==2||!e[0]||!e[1]))throw Error('Use A:B');let nodes=[...new Set(edges.flat())],vis=new Set(),stack=new Set(),cycle=false;function dfs(n){if(stack.has(n)){cycle=true;return}if(vis.has(n))return;vis.add(n);stack.add(n);edges.filter(e=>e[0]===n).forEach(e=>dfs(e[1]));stack.delete(n)}nodes.forEach(dfs);return table(['Waiter','Holder'],edges)+'<p>'+ (cycle?'Cycle detected: deadlock in this single-instance wait-for model.':'No cycle detected.')+'</p>'}}
 else if(type==='disk'){body=input('head','Initial cylinder','40')+input('req','Requests','10,45,80,12')+select('policy','Policy',['FIFO','SSTF','LOOK up']);run=()=>{let h=int(val('head'),0,999),a=seq(val('req')),total=0,rows=[];if(val('policy')==='LOOK up')a=a.filter(x=>x>=h).sort((a,b)=>a-b).concat(a.filter(x=>x<h).sort((a,b)=>b-a));while(a.length){if(val('policy')==='SSTF')a.sort((x,y)=>Math.abs(x-h)-Math.abs(y-h));let x=a.shift(),d=Math.abs(h-x);total+=d;rows.push([h,x,d,total]);h=x}return table(['From','To','Movement','Total'],rows)}}
+else if(type==='segment'){body=input('offset-bits','Offset bits','10')+input('segments','Descriptors: selector:base:length:up/down','0:1000:200:up,1:8000:200:up,3:9000:64:down')+input('vas','Virtual addresses','1100,1300,4072');run=()=>{let bits=int(val('offset-bits'),1,20),segments={};for(let token of val('segments').split(/[, ]+/)){let [k,b,n,dir]=token.split(':');if(!['up','down'].includes(dir))throw Error('Use selector:base:length:up/down');segments[int(k,0,255)]={base:int(b,0,10000000),length:int(n,0,2**bits),down:dir==='down'}}return table(['VA','Selector','Unsigned offset','Displacement','PA / status'],seq(val('vas'),0,10000000).map(v=>{let r=segmentTranslate(v,bits,segments);return[v,r.selector,r.offset,r.displacement??'—',r.pa??r.status]}))}}
+else if(type==='allocator'){body=input('arena','Arena bytes','64')+input('ops','Operations (+id:size or -id)','+A:16,+B:20,-A,-B')+select('fit','Policy',['first','best','worst']);run=()=>{let ops=val('ops').trim().split(/[, ]+/).map(t=>{let m=t.match(/^\+([A-Za-z0-9]+):(\d+)$/);if(m)return{type:'alloc',id:m[1],size:Number(m[2])};m=t.match(/^-([A-Za-z0-9]+)$/);if(m)return{type:'free',id:m[1]};throw Error('Use +A:16 or -A')});if(ops.length>50)throw Error('Maximum 50 operations');return table(['Operation','Result','Free ranges','Total free','Largest hole'],allocateTrace(int(val('arena'),1,65536),ops,val('fit')).map(r=>[r.op,r.result,r.holes.map(h=>'['+h.start+','+(h.start+h.size)+')').join(' '),r.totalFree,r.largest]))+'<p>Metadata and alignment excluded in this model.</p>'}}
+else if(type==='multilevel'){body=input('pagesize','Page bytes','256')+input('entrysize','Entry bytes','4')+input('root','Directory physical base','4096')+input('dirs','Directory entries (index:leaf physical base)','2:8192')+input('leaves','Leaf mappings (directory:leaf:PFN)','2:17:10')+input('vas','Virtual addresses (decimal)','37155,37156,37376');run=()=>{let p=int(val('pagesize'),1,65536),e=int(val('entrysize'),1,256),root=int(val('root'),0,10000000),dirs={},leaves={};for(let t of val('dirs').split(/[, ]+/)){let a=t.split(':');if(a.length!==2)throw Error('Use index:leaf physical base');dirs[int(a[0],0,65536)]=int(a[1],0,10000000)}for(let t of val('leaves').split(/[, ]+/)){let a=t.split(':');if(a.length!==3)throw Error('Use directory:leaf:PFN');leaves[int(a[0],0,65536)+':'+int(a[1],0,65536)]=int(a[2],0,1000000)}return table(['VA','VPN','Dir','Leaf','Offset','PDE address','PTE address','PA / status'],seq(val('vas'),0,1000000000).map(v=>{let r=walkTwoLevel(v,p,e,root,dirs,leaves);return[v,r.vpn,r.directory,r.leaf,r.offset,r.pdeAddress,r.pteAddress??'—',r.pa??r.status]}))+'<p>Both table levels have a full page of entries; this model permits partially used root tables. Missing entries are invalid. No TLB or permissions simulated.</p>'}}
+else if(type==='clock'){body=input('refs','Page references','1,2,3,1,4,2,5')+input('frames','Frame count','3');run=()=>{let r=clockReplace(seq(val('refs')),int(val('frames'),1,32));return table(['Page','Result','Victim','Frames','Use bits','Scan','Next hand'],r.rows.map(x=>[x.page,x.result,x.victim,x.frames.map(v=>v??'—').join(', '),x.bits.join(', '),x.scans.join('; '),x.hand]))+'<p>Misses: '+r.misses+'. Hand starts at 0; installation sets use bit to 1 and advances.</p>'}}
 else if(type==='filesystem'){body=input('writes','Block writes: block:value','2:A,5:B,2:C')+input('crash','Crash after stage (0=start, 1=journal records, 2=commit, 3=checkpoint)','2');run=()=>{let pairs=val('writes').split(',').map(x=>x.split(':')),stage=int(val('crash'),0,3);if(pairs.some(p=>p.length!==2||!p[0]||!p[1]))throw Error('Use block:value');let map={};if(stage>=2)for(const [k,v] of pairs)map[k]=v;return table(['Block','Recovered value'],Object.entries(map))+'<p>'+ (stage<2?'Incomplete transaction ignored.':stage===2?'Durably committed transaction replayed.':'Home locations checkpointed.')+' Assumes atomic durable commit and ordered journal writes.</p>'}}
 else {host.textContent='Use the official OSTEP exercise for this topic.';return}
 host.innerHTML='<div class="lab"><h3>'+labNames[type]+'</h3><p>Predict the result on paper before running the model. Change one parameter, then explain the difference.</p>'+body+'<button data-run>Run simulation</button><div data-out aria-live="polite"></div></div>';host.querySelector('[data-run]').onclick=()=>{try{host.querySelector('[data-out]').innerHTML=run()}catch(e){host.querySelector('[data-out]').textContent=e.message}}
