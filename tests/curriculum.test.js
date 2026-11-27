@@ -3,17 +3,18 @@ import assert from 'node:assert/strict';
 import {cpu} from '../cpu-depth.js';
 import {memory} from '../memory-depth.js';
 import {concurrency} from '../concurrency-depth.js';
+import {persistence} from '../persistence-depth.js';
 import {pdfRanges} from '../reading.js';
 import {matches,unitState,unitPassed,chapterPassed,unitUnlocked,gradeQuiz,selectedUnit} from '../depth.js';
-import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate,lockTrace,ticketTrace,semaphoreTrace,conditionTrace,eventTrace} from '../labs.js';
+import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate,lockTrace,ticketTrace,semaphoreTrace,conditionTrace,eventTrace,diskTiming,raidMap,xorParity,inodeTrace,appendCrash,journalCrash,logTrace,checksum,verifyBlock} from '../labs.js';
 
-const detailed={...cpu,...memory,...concurrency};
+const detailed={...cpu,...memory,...concurrency,...persistence};
 const all=Object.values(detailed).flat();
-test('detailed units cover introduction, CPU, memory and concurrency chapters with unique IDs',()=>{
+test('detailed units cover introduction, CPU, memory, concurrency and persistence chapters with unique IDs',()=>{
  assert.deepEqual(Object.keys(cpu).map(Number),[2,4,5,6,7,8,9,10]);
  assert.equal(new Set(all.map(u=>u.id)).size,all.length);
  assert.deepEqual(Object.keys(memory).map(Number),[13,14,15,16,17,18,19,20,21,22,23]);
- assert.equal(Object.values(cpu).flat().length,16);assert.equal(Object.values(memory).flat().length,24);assert.deepEqual(Object.keys(concurrency).map(Number),[26,27,28,29,30,31,32,33]);assert.equal(Object.values(concurrency).flat().length,20);assert.equal(all.length,60);
+ assert.equal(Object.values(cpu).flat().length,16);assert.equal(Object.values(memory).flat().length,24);assert.deepEqual(Object.keys(concurrency).map(Number),[26,27,28,29,30,31,32,33]);assert.equal(Object.values(concurrency).flat().length,20);assert.deepEqual(Object.keys(persistence).map(Number),[36,37,38,39,40,41,42,43,44]);assert.equal(Object.values(persistence).flat().length,21);assert.equal(all.length,81);
 });
 for(const [ch,units] of Object.entries(detailed))for(const u of units)test(u.id+' content structure and grading',()=>{
  assert.ok(u.pages[0]>=pdfRanges[ch][0]&&u.pages[1]<=pdfRanges[ch][1]);
@@ -114,4 +115,37 @@ test('event loop blocking delays a ready request',()=>{
  const blocked=eventTrace(8,2,'blocking'),async=eventTrace(8,2,'async');
  assert.equal(blocked.otherDispatch,8);assert.equal(blocked.otherLatency,6);assert.equal(async.otherDispatch,2);assert.equal(async.otherLatency,0);
  assert.equal(eventTrace(3,8,'blocking').otherLatency,0);
+});
+
+test('HDD timing converts RPM and throughput units',()=>{
+ const r=diskTiming(6000,4,100000,100);
+ assert.equal(r.rotationMs,5);assert.equal(r.transferMs,1);assert.equal(r.totalMs,10);assert.equal(r.effectiveMB,10);
+});
+test('RAID mapping, rotating parity and XOR recovery',()=>{
+ assert.deepEqual(raidMap(0,4,11),{logical:11,row:2,members:[3],parity:null,width:4});
+ assert.deepEqual(raidMap(1,4,3).members,[2,3]);
+ assert.equal(raidMap(4,4,4).parity,3);
+ assert.equal(raidMap(5,4,0).parity,3);assert.equal(raidMap(5,4,3).parity,2);
+ for(let i=0;i<12;i++){let r=raidMap(5,4,i);assert.equal(r.members.includes(r.parity),false)}
+ assert.equal(xorParity([6,3,5]),0);assert.equal(xorParity([0,6,5]),3);assert.equal(xorParity([0,6,7]),1);
+});
+test('inode and block bitmap allocation, failure, reclamation',()=>{
+ const r=inodeTrace(2,2,[{op:'create',name:'a'},{op:'append',name:'a'},{op:'create',name:'b'},{op:'append',name:'b'},{op:'append',name:'a'},{op:'unlink',name:'a'},{op:'append',name:'b'}]);
+ assert.equal(r[3].inodeBitmap,'11');assert.equal(r[3].dataBitmap,'11');assert.equal(r[4].result,'no free block');
+ assert.equal(r[5].inodeBitmap,'01');assert.equal(r[5].dataBitmap,'01');assert.deepEqual(r[6].files,[{name:'b',inode:1,blocks:[1,0]}]);
+});
+test('all append crash subsets and journal recovery',()=>{
+ let consistent=0;for(const i of [false,true])for(const b of [false,true])for(const d of [false,true]){const r=appendCrash(i,b,d);if(r.consistent)consistent++;assert.equal(r.freeReferenced,i&&!b);assert.equal(r.leak,b&&!i);assert.equal(r.stale,i&&!d)}
+ assert.equal(consistent,3);
+ for(const mode of ['data','ordered']){assert.equal(journalCrash(mode,2).committed,false);assert.equal(journalCrash(mode,3).replay,true);assert.equal(journalCrash(mode,4).stale,false);assert.equal(journalCrash(mode,5).replay,false)}
+ assert.equal(journalCrash('unsafe',3).stale,true);assert.equal(journalCrash('unsafe',5).stale,false);
+});
+test('log liveness follows most recent logical mapping',()=>{
+ const r=logTrace([{key:'a',value:'x'},{key:'b',value:'y'},{key:'a',value:'z'}]);
+ assert.equal(r.live,2);assert.equal(r.obsolete,1);assert.deepEqual(r.records.map(x=>x.live),[false,true,true]);
+});
+test('checksum collision, CRC reference vector, address and version checks',()=>{
+ assert.equal(checksum([3,5]),checksum([4,4]));assert.equal(checksum([3,5],'CRC32')===checksum([4,4],'CRC32'),false);
+ assert.equal(checksum([...new TextEncoder().encode('123456789')],'CRC32'),0xcbf43926);
+ assert.deepEqual(verifyBlock({address:'A',version:2},{address:'B',version:1,bytes:[3,5],checksum:8}),{content:true,address:false,version:false});
 });
