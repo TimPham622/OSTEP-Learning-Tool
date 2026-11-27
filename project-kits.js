@@ -407,5 +407,178 @@ export const projectKits=[
     ]
   }
 ];
+export const projectScaffolds={
+  "utilities": {
+    "units": [
+      "39a",
+      "39b"
+    ],
+    "trace": [
+      "Input bytes A, NUL, B; fread returns 3 even though buffer capacity is 4096.",
+      "Write exactly 3 bytes, not strlen(buffer). {The return value is the transferred length.}",
+      "If fwrite returns fewer bytes, diagnose output failure rather than reporting success. {Accepted output differs from requested output.}"
+    ],
+    "bug": "A cat implementation prints chunks with printf(\"%s\", buf). A file contains A, NUL, B. Why does the output differ from the input, and how should the output operation change?",
+    "hint": "Use the returned byte count from fread. A zero byte is ordinary binary data; a C string terminator is not an end-of-file marker."
+  },
+  "shell": {
+    "units": [
+      "5a",
+      "5b",
+      "39a"
+    ],
+    "trace": [
+      "For echo hello | cat, create a pipe before either fork. {Both children need the inherited endpoints.}",
+      "Writer dup2s the write end onto fd 1; reader dup2s read end onto fd 0; both close original ends. {The redirected descriptors retain references.}",
+      "Parent closes both ends before waiting for children. {EOF requires all references to the write end to close.}"
+    ],
+    "bug": "The writer exits but cat never finishes. The parent is waiting and still has its original pipe descriptors open. Draw all write-end references and identify the missing operation.",
+    "hint": "Close the parent's unused write end before waitpid; close unused inherited ends in each child too. An open writer descriptor prevents EOF even if no process writes."
+  },
+  "allocator": {
+    "units": [
+      "14a",
+      "17a",
+      "17b"
+    ],
+    "trace": [
+      "Initial free [0,128). Request 9 rounds to 16. {8-byte alignment requires ceiling division.}",
+      "Reserve [0,16), leave [16,128). {Split the first adequate free interval.}",
+      "Free offset 0 and merge touching intervals back to [0,128). {Both ranges are free and physically adjacent.}"
+    ],
+    "bug": "Free spans [0,16), [16,32) and live [32,64). A free-list implementation leaves the first two spans separate. alloc 24 fails despite enough contiguous bytes. Which invariant was omitted?",
+    "hint": "Coalesce adjacent free intervals at exact endpoints; do not merge across a live interval. Check adjacency on both sides of a newly freed span."
+  },
+  "hash": {
+    "units": [
+      "26b",
+      "28a",
+      "29b"
+    ],
+    "trace": [
+      "Keys 1 and 5 hash to bucket 1 with four buckets. {key mod 4 selects bucket.}",
+      "A locks bucket 1, traverses list and increments or inserts node. {The entire mutation is protected.}",
+      "B waits on same lock; after A releases, B observes the updated list. {Serialization prevents duplicate insertion or lost update.}"
+    ],
+    "bug": "Two threads both find a missing key before taking the bucket lock, then each inserts it under the lock. The list now has duplicate keys. Identify the unprotected decision and change the lock scope.",
+    "hint": "Lookup and insertion must be one protected logical operation. Rechecking under the lock works; locking insertion alone does not."
+  },
+  "pool": {
+    "units": [
+      "30a",
+      "30b",
+      "31b",
+      "32b"
+    ],
+    "trace": [
+      "Capacity one, count zero; consumer waits in a while loop. {No available item.}",
+      "Producer inserts task 1 under lock, sets count=1, signals not_empty. {Predicate changed.}",
+      "Consumer reacquires lock, checks count, removes 1, signals not_full. After close and empty it exits. {Close is a persistent predicate.}"
+    ],
+    "bug": "A worker uses if(count==0) pthread_cond_wait(...), then dequeues without testing again. Two workers wake for one task. Construct an execution in which the second dequeue is invalid.",
+    "hint": "The first worker can consume the only item before the second reacquires the mutex. Use while with the closed/empty predicate."
+  },
+  "fsimage": {
+    "units": [
+      "40a",
+      "40b",
+      "42a",
+      "42c"
+    ],
+    "trace": [
+      "Image has name a -> inode 0 -> block 0 holding old; bit 0 allocated. {Reachability and allocation agree.}",
+      "Construct a fully validated new image with new data and write a temporary sibling. {Original image is still untouched.}",
+      "Simulated failure before rename leaves old; after rename leaves new. {Atomic publication assumption, not actual power-loss durability.}"
+    ],
+    "bug": "A crash trace leaves an inode pointing at block 4 but allocation bit 4 is zero. What could a later put do, and which check should reject the image?",
+    "hint": "A free-marked referenced block may be reallocated. Validate both directions of the bitmap/reference invariant before any write."
+  },
+  "xv6-syscall": {
+    "units": [
+      "6a",
+      "6b",
+      "39a"
+    ],
+    "trace": [
+      "User invokes ostep_info with an address of an int. {Stub transfers syscall number and arguments.}",
+      "Handler obtains caller PID and destination VA; copyout validates and writes using the caller page table. {User address is not a trusted kernel pointer.}",
+      "Return status through syscall result; user observes either PID or error. {Controlled return path.}"
+    ],
+    "bug": "The handler writes *(int*)user_va = pid directly. Why is this not equivalent to a checked copyout, and what should happen for an unmapped destination?",
+    "hint": "Use the local revision's copyout contract and check its return; never dereference a raw user VA as a kernel pointer."
+  },
+  "xv6-scheduler": {
+    "units": [
+      "6b",
+      "7b",
+      "9a",
+      "10b"
+    ],
+    "trace": [
+      "A RUNNABLE process is selected; increment its dispatch count while protected. {Accounting belongs to selection, not every timer interrupt.}",
+      "Set RUNNING and switch according to existing lock protocol. {Scheduler state invariant.}",
+      "On later reschedule, increment again; a blocked or exited process is not eligible. {Dispatch count is not CPU service time.}"
+    ],
+    "bug": "A learner increments the counter on every timer interrupt, then interprets it as dispatch count. Construct a case where the timer interrupts but the same process resumes without a new dispatch.",
+    "hint": "Separate timer notification, scheduling choice and actual context dispatch. Instrument the selected RUNNABLE-to-RUNNING transition defined by your revision."
+  },
+  "xv6-vm": {
+    "units": [
+      "18a",
+      "20b",
+      "21a"
+    ],
+    "trace": [
+      "A stack VA is below MAXVA; walk without allocating. {Input is in supported range.}",
+      "Inspect valid leaf and user-access bits; mask out PFN and all unrelated metadata. {Read-only inspection contract.}",
+      "For a high invalid VA return 0 before walk. {Do not trigger a kernel panic from invalid input.}"
+    ],
+    "bug": "The syscall calls walk(pagetable, va, 1) for an unmapped address. Why can this inspection change memory state, even if no valid user page is returned?",
+    "hint": "alloc=1 permits intermediate page-table allocation. Validate range first and use alloc=0 for observational queries."
+  },
+  "scheduler": {
+    "units": [
+      "7a",
+      "7b",
+      "7c",
+      "8b"
+    ],
+    "trace": [
+      "A arrives 0, burst 4; B arrives 2, burst 1; RR q=2. A runs 0–2. {A initially alone.}",
+      "At t=2 enqueue B before requeue A; B runs 2–3 and finishes. {Declared boundary convention.}",
+      "A runs 3–5 and finishes. Response A=0, B=0; completions 5 and 3. {Response subtracts arrival from first dispatch.}"
+    ],
+    "bug": "An RR simulator requeues A before admitting B at t=2 in the worked trace. What completion and response values differ under that alternative rule?",
+    "hint": "Under that alternative convention A can run 2–4; B first runs at 4 and finishes 5. A finishes 4; B response 2. The program must follow the specified arrival-before-requeue rule."
+  },
+  "pager": {
+    "units": [
+      "22a",
+      "22b",
+      "22c"
+    ],
+    "trace": [
+      "Capacity 2, trace 1,2,1,3. Both initial references miss and fill frames. {Empty cache.}",
+      "Reference 1 hits: LRU marks 1 most recent; FIFO does not change insertion order. {Different policy metadata.}",
+      "3 misses; LRU evicts 2; FIFO evicts 1. {Choose victim by specified policy.}"
+    ],
+    "bug": "A FIFO implementation updates its insertion timestamp on every hit. On 1,2,1,3,1 with capacity 2, why does the miss count disagree with FIFO?",
+    "hint": "Refreshing insertion time on hit implements recency-like behavior. FIFO should evict page 1 on reference 3, so the last 1 misses."
+  },
+  "rpc": {
+    "units": [
+      "47b",
+      "47c",
+      "48b"
+    ],
+    "trace": [
+      "Request ID 10 inc executes once; counter becomes 1; reply dropped. {Client has no completion evidence.}",
+      "Retry same ID 10 inc after timeout; server finds cached result 1, replies without increment. {Duplicate detection.}",
+      "ID 11 inc executes, counter 2. Retrying ID 10 still returns 1. {Result cache stores original result, not current value.}"
+    ],
+    "bug": "The client generates a fresh ID each time it times out. Server deduplication is enabled but the counter increases twice. Explain why the dedup cache did not help.",
+    "hint": "A retry must preserve the logical request identity and arguments. A fresh ID represents a distinct request to the server."
+  }
+};
 export const projectReady=(p,isMastered)=>p.chapters.every(isMastered);
 export function projectComplete(p,s){return Boolean(s.evidence?.trim()&&p.milestones.every((_,i)=>s.milestones?.[i])&&p.checks.every((_,i)=>s.checks?.[i]));}
