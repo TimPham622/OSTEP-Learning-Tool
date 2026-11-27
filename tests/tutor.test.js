@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {config,tutorTask,contextFor,messagesFor,validateFeedback,offlineFeedback,formatFeedback,createTutorRuntime,coach} from '../tutor.js';
+import {detailed} from '../depth.js';
+import {exerciseReference} from '../pedagogy-audit.js';
 const u={id:'demo',name:'Trace',sections:'1.1',pages:[1,2],opening:'Explain mechanism',theory:['State, rule, transition'],anatomy:'Rule inputs',coach:['Use the rule'],examples:[['Trace','Start at x=1','Apply rule'],['Other','Check bound']],direct:[['Question A','SECRET_ANSWER','SECRET_HINT'],['Question B','SECRET_B','hint']],variation:[['Question C','SECRET_C','hint'],['Question D','SECRET_D','hint']],synthesis:['Synthesize'],rubric:['State assumption','Explain step'],transfer:['Example 1, steps 1–2','Transfer task','SECRET_TRANSFER','bridge']};
 const ctx=contextFor(u,tutorTask(u,'exercise','d0','My starting state'),{example:1,steps:[2]});
 const good={observation:'Check the input assumption.',example:1,step:2,question:'Which state changes?',rubric:[]};
@@ -72,4 +74,19 @@ test('WebGPU unavailable and worker cancellation',async()=>{
 test('smoke test distinguishes exact sentinel and noncompliant response',async()=>{
  const r=createTutorRuntime({gpuCheck:async()=>true,workerFactory:()=>({postMessage(p){this.onmessage({data:{id:p.id,type:'result',value:'OSTEP_OK'}})},terminate(){}})});
  assert.equal((await r.diagnose('webllm','model')).ok,true);assert.equal((await r.diagnose('offline','')).ok,true);
+});
+
+test('every detailed unit has valid deterministic context for all task kinds',()=>{
+ let count=0;
+ for(const unit of Object.values(detailed).flat()){
+  const tasks=[['exercise','d0'],['exercise','d1'],['exercise','v0'],['exercise','v1'],['opening',''],['synthesis',''],['explain','']];
+  if(unit.transfer)tasks.push(['transfer','']);
+  for(const [kind,key] of tasks){
+   const c=contextFor(unit,tutorTask(unit,kind,key,'A partial reasoning attempt.'),kind==='exercise'?exerciseReference(unit,key):null);
+   assert.deepEqual(validateFeedback(JSON.stringify(offlineFeedback(c)),c),offlineFeedback(c));
+   assert.equal(c.unit,unit.id);
+   count++;
+  }
+ }
+ assert.equal(count,646);
 });
