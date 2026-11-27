@@ -1,17 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {cpu} from '../cpu-depth.js';
+import {memory} from '../memory-depth.js';
 import {pdfRanges} from '../reading.js';
 import {matches,unitState,unitPassed,chapterPassed,unitUnlocked,gradeQuiz,selectedUnit} from '../depth.js';
-import {schedule,replace} from '../labs.js';
+import {schedule,replace,walkTwoLevel,clockReplace,allocateTrace,segmentTranslate} from '../labs.js';
 
-const all=Object.values(cpu).flat();
-test('detailed units cover introduction and CPU chapters with unique IDs',()=>{
+const detailed={...cpu,...memory};
+const all=Object.values(detailed).flat();
+test('detailed units cover introduction, CPU and memory chapters with unique IDs',()=>{
  assert.deepEqual(Object.keys(cpu).map(Number),[2,4,5,6,7,8,9,10]);
  assert.equal(new Set(all.map(u=>u.id)).size,all.length);
- assert.equal(all.length,16);
+ assert.deepEqual(Object.keys(memory).map(Number),[13,14,15,16,17,18,19,20,21,22,23]);
+ assert.equal(Object.values(cpu).flat().length,16);assert.equal(Object.values(memory).flat().length,24);assert.equal(all.length,40);
 });
-for(const [ch,units] of Object.entries(cpu))for(const u of units)test(u.id+' content structure and grading',()=>{
+for(const [ch,units] of Object.entries(detailed))for(const u of units)test(u.id+' content structure and grading',()=>{
  assert.ok(u.pages[0]>=pdfRanges[ch][0]&&u.pages[1]<=pdfRanges[ch][1]);
  assert.equal(u.examples.length,2);assert.ok(u.examples.every(ex=>ex.length>=4));
  assert.equal(u.direct.length,2);assert.equal(u.variation.length,2);
@@ -42,4 +45,44 @@ test('CPU scheduling representative completion traces',()=>{
 test('page replacement sample',()=>{
  assert.equal(replace([1,2,1,3,1],2,'FIFO').miss,4);
  assert.equal(replace([1,2,1,3,1],2,'LRU').miss,3);
+});
+
+test('two-level walk: addresses, indices and invalid mappings',()=>{
+ const r=walkTwoLevel(0x9123,256,4,4096,{2:8192},{'2:17':10});
+ assert.deepEqual(r,{vpn:145,offset:35,directory:2,leaf:17,pdeAddress:4104,pteAddress:8260,pa:2595,status:'valid'});
+ assert.equal(walkTwoLevel(0x9123,256,4,4096,{},{}).status,'missing directory');
+ assert.equal(walkTwoLevel(0x9123,256,4,4096,{2:8192},{}).status,'invalid PTE');
+ assert.equal(walkTwoLevel(64*64*256,256,4,4096,{},{}).status,'VA outside two-level address space');
+});
+test('clock replacement clears use bits and wraps the hand',()=>{
+ const r=clockReplace([1,2,3,1,4,2,5],3);
+ assert.equal(r.misses,5);
+ assert.deepEqual(r.rows[4].scans,['clear 0','clear 1','clear 2','install 0']);
+ assert.equal(r.rows[4].victim,1);
+ assert.deepEqual(r.rows[4].bits,[1,0,0]);
+ assert.equal(r.rows[6].victim,3);
+ assert.deepEqual(r.rows[6].frames,[4,2,5]);
+ assert.equal(r.rows[6].hand,0);
+});
+test('allocator splitting, coalescing, fragmented failure and fit policy',()=>{
+ const alloc=(id,size)=>({type:'alloc',id,size}),free=id=>({type:'free',id});
+ let r=allocateTrace(64,[alloc('A',16),alloc('B',20),free('A'),free('B')]);
+ assert.deepEqual(r[0].holes,[{start:16,size:48}]);
+ assert.deepEqual(r[2].holes,[{start:0,size:16},{start:36,size:28}]);
+ assert.deepEqual(r[3].holes,[{start:0,size:64}]);
+ let ops=[alloc('A',30),alloc('B',10),alloc('C',12),alloc('D',12),free('A'),free('C')];
+ r=allocateTrace(64,[...ops,alloc('E',31)]);
+ assert.equal(r.at(-1).result,'failed');assert.equal(r.at(-1).totalFree,42);assert.equal(r.at(-1).largest,30);
+ assert.equal(allocateTrace(64,[...ops,alloc('E',10)],'best').at(-1).result,'allocated [40,50)');
+ assert.equal(allocateTrace(64,[...ops,alloc('E',10)],'first').at(-1).result,'allocated [0,10)');
+});
+test('segmentation positive, negative and exclusive bounds',()=>{
+ const s={1:{base:8000,length:200,down:false},3:{base:9000,length:64,down:true}};
+ assert.equal(segmentTranslate(1100,10,s).pa,8076);
+ assert.equal(segmentTranslate(1224,10,s).status,'bounds fault');
+ assert.equal(segmentTranslate(4072,10,s).displacement,-24);
+ assert.equal(segmentTranslate(4072,10,s).pa,8976);
+ assert.equal(segmentTranslate(4032,10,s).pa,8936);
+ assert.equal(segmentTranslate(4031,10,s).status,'bounds fault');
+ assert.equal(segmentTranslate(0,10,s).status,'unmapped segment');
 });
